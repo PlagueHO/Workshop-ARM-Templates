@@ -24,8 +24,8 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Prerequisite Knowledge](#prerequisite-knowledge)
 - [Section 1 - Getting Setup](#section-1---getting-setup)
 - [Part 1.1 - Opening a Cloud Shell](#part-1.1---opening-a-cloud-shell) - 5 min
-- [Part 1.2 - Register Providers required for Lab](#part-1.2---register-providers-required-for-lab) - 5 min
-- [Part 1.3 - Configure Visual Studio Code](#part-1.3---configure-visual-studio-code) - 5 min
+- [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
+- [Part 1.3 - Register Providers required for Lab](#part-1.3---register-providers-required-for-lab) - 5 min
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -113,15 +113,67 @@ lab we'll just be using the defaults._
 
    ![Select PowerShell Cloud Shell](images/cloudshellselectpowershell.png "Select PowerShell Cloud Shell")
 
-### Part 1.2 - Register Providers required for Lab
+### Part 1.2 - Configure Visual Studio Code
 
 > Estimated Completion Time: 5 min
 
-Depending on your type of subscription (Free, Azure Pass etc.) you may have to register the required resource providers. This is because by
-   default many resource providers (types of resource providers) are not
-   registered by default.
+In this part we will configure Visual Studio Code with the following
+extensions:
 
-1. Launch an **Cloud Shell** in the Azure Portal or as a standalone console:
+- [Azure Account](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account):
+  The Azure Account extension provides a single Azure sign-in and subscription filtering experience for all other Azure extensions. It makes Azure's Cloud Shell service available in VS Code's integrated terminal.
+- [Azure Resource Manager Tools](https://marketplace.visualstudio.com/items?itemName=msazurermtools.azurerm-vscode-tools):
+  This extension provides language support for Azure Resource Manager deployment templates and template language expressions.
+
+We will then be configuring Visual Studio Code to be able to connect
+to our Azure Cloud Shell.
+
+1. Start Visual Studio Code.
+1. Click Extensions.
+
+   ![Visual Studio Code Extensions](images/vscodeextensions.png "Visual Studio Code Extensions")
+
+1. Search for the `Azure Account` extension and click **Install**.
+
+   ![Visual Studio Code Azure Account Extension](images/vscodeextensionazureaccount.png "Visual Studio Code Azure Account Extension")
+
+1. Search for the `Azure Resource Manager Tools` extension and click `Install`.
+
+   ![Visual Studio Code Azure Resource Manager Tools Extension](images/vscodeextensionazureresourcemanagertools.png "Visual Studio Code Azure Resource Manager Tools Extension")
+
+1. Press <kbd>F1</kbd> to bring up the Visual Studio command search.
+1. Enter `Cloud Shell` in the command search.
+1. Click the **Azure: Open PowerShell in Cloud Shell** command.
+
+   ![Visual Studio Code Cloud Shell Command](images/vscodesearchcloudshellcommand.png "Visual Studio Code Cloud Shell Command")
+
+1. A terminal will open in the Visual Studio Code window requiring you
+   to log in to Azure.
+
+   ![Visual Studio Code Cloud Shell Sign In](images/vscodecloudshellsignin.png "Visual Studio Code Cloud Shell Sign In")
+
+1. Click Sign In.
+1. A browser window will open where you will be asked to sign into your
+   Azure account.
+1. Sign into the Azure account you created the Cloud Shell in during
+   _Step 1.1_.
+1. Return to your Visual Studio Code window where you will now have a
+   Cloud Shell console ready to accept commands:
+
+   ![Visual Studio Code Cloud Shell Started](images/vscodecloudshellstarted.png "Visual Studio Code Cloud Shell Started")
+
+This console is exactly the same as the Cloud Shell you get in the
+[Azure Portal](https://portal.azure.com) or in [shell.azure.com](https://shell.azure.com).
+
+### Part 1.3 - Register Providers required for Lab
+
+> Estimated Completion Time: 5 min
+
+Depending on your type of subscription (Free, Azure Pass etc.) you may have to register the required resource providers.
+This is because by default many resource providers (types of resource providers) are not registered by default.
+
+1. Launch a **Cloud Shell** in Visual Studio Code, in the
+   [Azure Portal](https://portal.azure.com) or using:
 
    [![Launch Cloud Shell](https://shell.azure.com/images/launchcloudshell.png "Launch Cloud Shell")](https://shell.azure.com)
 
@@ -143,20 +195,11 @@ Depending on your type of subscription (Free, Azure Pass etc.) you may have to r
 
    ![Register Providers](images/registerproviders.png "Register Providers")
 
-### Part 1.3 - Configure Visual Studio Code
+Your Azure Account and Visual Studio Code is set up to be able to work
+with Azure Resource Manager (ARM) Templates more effectively.
 
-> Estimated Completion Time: 5 min
-
-In this part we will configure Visual Studio Code with the following
-extensions:
-
-- [Azure Account](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account):
-  The Azure Account extension provides a single Azure sign-in and subscription filtering experience for all other Azure extensions. It makes Azure's Cloud Shell service available in VS Code's integrated terminal.
-- [Azure Resource Manager Tools](https://marketplace.visualstudio.com/items?itemName=msazurermtools.azurerm-vscode-tools):
-  This extension provides language support for Azure Resource Manager deployment templates and template language expressions.
-
-We will then be configuring Visual Studio Code to be able to connect
-to our Azure Cloud Shell.
+**These tools are very useful throughout Azure and should be part of
+any Azure professionals toolbox.**
 
 ## Section 5 - Cleanup After the Workshop
 
@@ -164,8 +207,8 @@ to our Azure Cloud Shell.
 
 > Estimated Completion Time: 25 min
 
-> This step is optional and only needs to be done if you're finished with your
-> cluster and want to get rid of it to save some Azure credit.
+This step is optional and only needs to be done if you're finished with
+workshop resources and want to get rid of them to save some Azure credit.
 
 ![Congratulations](images/congratulations.png "Congratulations")
 
