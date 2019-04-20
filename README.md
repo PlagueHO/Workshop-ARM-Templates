@@ -23,7 +23,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [What You Will Learn](#what-you-will-learn)
 - [Prerequisite Knowledge](#prerequisite-knowledge)
 - [Section 1 - Getting Setup](#section-1---getting-setup)
-- [Part 1.1 - Opening a Cloud Shell](#part-1.1---opening-a-cloud-shell) - 5 min
+- [Part 1.1 - Setting up Cloud Shell](#part-1.1---setting-up-cloud-shell) - 5 min
 - [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
 - [Part 1.3 - Register Providers required for Lab](#part-1.3---register-providers-required-for-lab) - 5 min
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
@@ -70,7 +70,7 @@ In this section we'll set up _Azure Cloud Shell_ and _Visual Studio Code_,
 so that we're all set to create and deploy ARM templates right from our
 desktop.
 
-### Part 1.1 - Opening a Cloud Shell
+### Part 1.1 - Setting up Cloud Shell
 
 > Estimated Completion Time: 5 min
 
