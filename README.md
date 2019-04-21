@@ -29,6 +29,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Section 2 - Creating an ARM Template](#section-2---creating-an-arm-template)
 - [Part 2.1 - Create Resources in the Portal](#part-2.1---create-resources-in-the-portal)
 - [Part 2.2 - Export an ARM Template](#part-2.2---export-an-arm-template)
+- [Part 2.3 - Edit an Exported ARM Template](#part-2.3---edit-an-exported-arm-template)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -214,7 +215,7 @@ and then export them as a new ARM Template.
 Create a simple Azure App Service and App Service plan within a
 Resource Group to host a simple web application.
 
-> Estimated Completion Time: 5 min
+> Estimated Completion Time: 7 min
 
 1. Open the [Azure Portal](https://portal.azure.com)
 1. Click `Create a Resource`:
@@ -265,23 +266,101 @@ You should see this page when the App Service has started up:
 
 ### Part 2.2 - Export an ARM Template
 
-> Estimated Completion Time: 5 min
+> Estimated Completion Time: 3 min
+
+The next step is to export the resources we created in _Part 2.1_
+as a new ARM Template.
+You can either export all resources in a Resource Group or a single
+resource at a time.
+In this lab we will export the entire _Resource Group_ which will
+just export all the resources in the Resource Group.
+
+1. Open the [Azure Portal](https://portal.azure.com).
+1. Click `Resource Groups` in the Azure Portal.
+
+   ![Select Resource Groups](images/portalopenresourcegroup.png "Select Resource Groups")
+
+1. Click the Resource Group that was created to contain your App Service
+   in _Part 2.1_.
+1. Click `Export Template`.
+
+   ![Export Resource Group](images/portalexporttemplate.png "Export Resource Group")
+
+   It will take a few seconds to generate the ARM Template and other related
+   files.
+
+   ![Export Template](images/portalexporttemplatedetails.png "Export Template")
+
+   _We could add this template to our Library by clicking `Add to Library`.
+   However, because our template really needs some clean up and
+   customization, saving it to the Library isn't something we want to do
+   now._
+
+1. Click `Download` to download a zip file containing our template.
+1. Extract the downloaded zip file to a folder on your computer
+   and make a note of the folder as we will use it in the next step.
+
+   ![Unzip ARM Template Extract](images/unziparmtemplateextract.png "Unzip ARM Template Extract")
+
+The actual ARM Template is the `template.json` file in the zip file.
+The other files are scripts that can be used to deploy the ARM Template
+as well as a parameters file for the template.
+
+### Part 2.3 - Edit an Exported ARM Template
+
+> Estimated Completion Time: 10 min
+
+Once we've exported a template we typically need to do two things:
+
+- Clean up the template by removing any uneccessary properties.
+- Add parameters for any properties we want to set when deploying the
+  template.
+
+We will do this by editing the `template.json` file in _Visual Studio
+Code_.
+
+1. Open _Visual Studio Code_.
+1. Select `Open Folder` from the `File` menu.
+1. Select the folder you extracted the files to in _Part 2.2_.
+1. Select the `template.json` file:
+
+   ![Edit Template in Visual Studio Code](images/visualstudiocdeopentemplate.png "Edit Template in Visual Studio Code")
+
+1.
 
 ## Section 5 - Cleanup After the Workshop
 
 ### Part 5.1 - Remove Resources and Resource Groups
 
-> Estimated Completion Time: 25 min
+> Estimated Completion Time: 2 min
 
 This step is optional and only needs to be done if you're finished with
 workshop resources and want to get rid of them to save some Azure credit.
 
+1. Open the [Azure Portal](https://portal.azure.com).
+1. Click `Resource Groups` in the Azure Portal.
+
+   ![Select Resource Groups](images/portalopenresourcegroup.png "Select Resource Groups")
+
+1. Click the Resource Group that was created to contain your App Service
+   in _Part 2.1_.
+1. Click `Delete resource group`.
+
+   ![Select Resource Groups](images/portalopenresourcegroup.png "Select Resource Groups")
+
+1. Enter the name of the Resource Group to confirm you want to delete
+   it and Click Delete.
+
 ![Congratulations](images/congratulations.png "Congratulations")
 
 **Well done!**
-You have taken your first steps into the amazingly powerful world of
-Containers, Kubernetes and Azure Kubernetes Service. This technology is
-increadibly powerful and can allow your applications to run virtually
-anywhere and they will always run the same way.
+
+You have taken your first steps into the powerful world of
+deploying and managing Azure resources using ARM templates.
+This enables you to deploy and redeploy your Azure resources
+in a cost effective, automated, auditable and repeatable way.
+
+If you're keen to learn move from walking to running, how about checking
+out how to deploy ARM templates using [Azure DevOps](https://dev.azure.com).
 
 Thank you!
