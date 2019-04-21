@@ -26,6 +26,9 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 1.1 - Setting up Cloud Shell](#part-1.1---setting-up-cloud-shell) - 5 min
 - [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
 - [Part 1.3 - Register Providers required for Lab](#part-1.3---register-providers-required-for-lab) - 5 min
+- [Section 2 - Creating an ARM Template](#section-2---creating-an-arm-template)
+- [Part 2.1 - Create Resources in the Portal](#part-2.1---create-resources-in-the-portal)
+- [Part 2.2 - Export an ARM Template](#part-2.2---export-an-arm-template)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -200,6 +203,69 @@ with Azure Resource Manager (ARM) Templates more effectively.
 
 **These tools are very useful throughout Azure and should be part of
 any Azure professionals toolbox.**
+
+## Section 2 - Creating an ARM Template
+
+In this section we'll create some resources using the [Azure Portal](https://portal.azure.com)
+and then export them as a new ARM Template.
+
+### Part 2.1 - Create Resources in the Portal
+
+Create a simple Azure App Service and App Service plan within a
+Resource Group to host a simple web application.
+
+> Estimated Completion Time: 5 min
+
+1. Open the [Azure Portal](https://portal.azure.com)
+1. Click `Create a Resource`:
+
+   ![Create a Resource](images/portalcreatearesource.png "Create a Resource")
+
+1. Select `Web` under Azure Marketplace and click `Web App`:
+
+   ![Create a Web App](images/portalcreatewebapp.png "Create a Web App")
+
+1. Set an **App name** to one that will be **Globally Unique**. For example
+   `dsrgab19-dev`.
+1. Select `Create new` under **Resource Group** and enter the same name
+   as the **App Name** but append '-rg'. For example `dsrgab19-dev-rg`.
+1. Set **OS** to `Windows`.
+1. Set **Publish** to `Docker Image`.
+
+   ![Create a Web App Settings](images/portalcreatewebappsettings.png "Create a Web App Settings")
+
+1. Click `Configure Container`.
+1. Select `Single Container (Preview)`.
+1. Select `Private Registry`.
+1. Set **Server URL** to `https://mcr.microsoft.com`.
+1. Set **Image and Optional Tag** to `mcr.microsoft.com/dotnet/core/samples:aspnetapp`.
+
+   ![Create a Web App Container](images/portalcreatewebappcontainer.png "Create a Web App Container")
+
+1. Click `Apply`.
+1. Click `Create`.
+
+Your _App Service_ hosting a Windows Server Container will be deployed.
+It will take a few minutes for the service to be provisioned.
+Once it has been provisioned you can check the _App Service_ is serving
+by opening your _App Service_ and clicking the `URL`.
+
+   ![Test Web App](images/portaltestwebapp.png "Test Web App")
+
+We'll leave this up to you to determine the best way to locate your
+_App Service_.
+
+Note: If you get this error, just wait a minute and try again:
+
+   ![Web App Starting Up](images/webappstartingup.png "Web App Starting Up")
+
+You should see this page when the App Service has started up:
+
+   ![Web App Started Up](images/webappstartedup.png "Web App Started Up")
+
+### Part 2.2 - Export an ARM Template
+
+> Estimated Completion Time: 5 min
 
 ## Section 5 - Cleanup After the Workshop
 
