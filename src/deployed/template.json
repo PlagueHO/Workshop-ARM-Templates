@@ -1,0 +1,227 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sites_dsrgab19_dev_name": {
+            "defaultValue": "dsrgab19-dev",
+            "type": "String"
+        },
+        "serverfarms_dsrgab19_dev_sf_name": {
+            "defaultValue": "dsrgab19-dev-sf",
+            "type": "String"
+        },
+        "components_dsrgab19_dev_ai_name": {
+            "defaultValue": "dsrgab19-dev-ai",
+            "type": "String"
+        },
+        "alertrules_Failure_Anomalies___dsrgab19_dev_ai_name": {
+            "defaultValue": "Failure Anomalies - dsrgab19-dev-ai",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "microsoft.insights/components",
+            "apiVersion": "2015-05-01",
+            "name": "[parameters('components_dsrgab19_dev_ai_name')]",
+            "location": "westus2",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-09-01",
+            "name": "[parameters('serverfarms_dsrgab19_dev_sf_name')]",
+            "location": "West US 2",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "kind": "app",
+            "properties": {
+                "name": "[parameters('serverfarms_dsrgab19_dev_sf_name')]",
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "microsoft.insights/alertrules",
+            "apiVersion": "2014-04-01",
+            "name": "[parameters('alertrules_Failure_Anomalies___dsrgab19_dev_ai_name')]",
+            "location": "West US 2",
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('components_dsrgab19_dev_ai_name'))]"
+            ],
+            "tags": {
+                "hidden-link:/subscriptions/72ad9153-ecab-48c9-8a7a-d61f2390df78/resourceGroups/dsrgab19-dev-rg/providers/microsoft.insights/components/dsrgab19-dev-ai": "Resource"
+            },
+            "properties": {
+                "name": "[parameters('alertrules_Failure_Anomalies___dsrgab19_dev_ai_name')]",
+                "description": "",
+                "isEnabled": true,
+                "condition": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+                    "dataSource": {
+                        "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+                        "resourceUri": "[resourceId('microsoft.insights/components', parameters('components_dsrgab19_dev_ai_name'))]",
+                        "metricName": "advanced::A3108E3D-5E26-44CF-B232-783F5E20EF10::ewAiAEgAeQBwAGUAcgBpAG8AbgBBAHAAcABsAGkAYwBhAHQAaQBvAG4AUwBpAGQAIgA6AG4AdQBsAGwALAAiAEgAeQBwAGUAcgBpAG8AbgBTAHUAYgBqAGUAYwB0AFMAaQBkACIAOgBuAHUAbABsACwAIgBIAHkAcABlAHIAaQBvAG4ATwBiAHMAZQByAHYAZQByAFMAaQBkACIAOgBuAHUAbABsACwAIgBDAHUAcwB0AG8AbQBlAHIAQQBjAGMAbwB1AG4AdABJAGQAIgA6ACIAMAAwADAAMAAwADAAMAAwAC0AMAAwADAAMAAtADAAMAAwADAALQAwADAAMAAwAC0AMAAwADAAMAAwADAAMAAwADAAMAAwADAAIgAsACIAQQBwAHAAbABpAGMAYQB0AGkAbwBuAE4AYQBtAGUAIgA6AG4AdQBsAGwALAAiAEEAcABwAGwAaQBjAGEAdABpAG8AbgBJAGQAIgA6AG4AdQBsAGwALAAiAFAAcgBvAGYAaQBsAGUASQBkACIAOgAwACwAIgBXAGkAbgBkAG8AdwBTAGkAegBlAEkAbgBNAGkAbgB1AHQAZQBzACIAOgA2ADAALAAiAE0AZQB0AHIAaQBjAE4AYQBtAGUAIgA6ACIAIgAsACIAVABoAHIAZQBzAGgAbwBsAGQAIgA6ADIALgAwACwAIgBBAGwAZQByAHQAVABlAG0AcABsAGEAdABlAEkAZAAiADoAIgAiACwAIgBSAHUAbABlAEkAZAAiADoAIgAiACwAIgBSAHUAbABlAE4AYQBtAGUAIgA6ACIAIgAsACIAUgB1AGwAZQBEAGUAcwBjAHIAaQBwAHQAaQBvAG4AIgA6ACIAIgAsACIAUgBlAHMAbwB1AHIAYwBlAEkAZAAiADoAbgB1AGwAbAAsACIAUwB1AGIAcwBjAHIAaQBwAHQAaQBvAG4ASQBkACIAOgBuAHUAbABsACwAIgBBAGcAZwByAGUAZwBhAHQAZQBGAHUAbgBjAHQAaQBvAG4AIgA6ACIAIgAsACIAQwBvAG0AcABhAHIAaQBzAG8AbgBPAHAAZQByAGEAdABvAHIAIgA6ACIAewBcACIAQgBhAHMAZQBsAGkAbgBlAFQAaQBtAGUAcwBwAGEAbgBcACIAOgBcACIAMAAwADoANAAwADoAMAAwAFwAIgAsAFwAIgBJAG4AcwBpAGcAaAB0AHMAUwBlAHIAdgBpAGMAZQBMAGEAZwBcACIAOgBcACIAMAAwADoAMAAwADoAMAAwAFwAIgAsAFwAIgBCAHUAZgBmAGUAcgBUAGkAbQBlAFwAIgA6AFwAIgAwADAAOgAwADEAOgAwADAAXAAiACwAXAAiAEIAbABvAGIAUwB0AG8AcgBhAGcAZQBMAG8AZwBnAGkAbgBnAEUAbgBhAGIAbABlAGQAXAAiADoAZgBhAGwAcwBlACwAXAAiAFUAcwBlAHIAUwB1AHAAcAByAGUAcwBzAGkAbwBuAHMAXAAiADoAbgB1AGwAbAAsAFwAIgBQAHIAbwBmAGkAbABlAEkAZABcACIAOgAwACwAXAAiAEUAbQBhAGkAbABUAHkAcABlAFwAIgA6ADAALABcACIAUgBkAGQARgBhAGkAbAB1AHIAZQBzAFMAcABpAGsAZQBUAGgAcgBlAHMAaABvAGwAZABcACIAOgAzAC4AMAAsAFwAIgBSAGEAdwBQAHIAbwBhAGMAdABpAHYAZQBSAHUAbABlAEMAbwBuAGYAaQBnAFwAIgA6AG4AdQBsAGwAfQAiACwAIgBFAG4AYQBiAGwAZQBTAGUAbgBkAEUAbQBhAGkAbABUAG8AQwB1AHMAdABvAG0AIgA6AGYAYQBsAHMAZQAsACIAQwB1AHMAdABvAG0ARQBtAGEAaQBsAHMARQBuAGMAbwBkAGUAZAAiADoAIgAiACwAIgBFAG4AYQBiAGwAZQBTAGUAbgBkAEUAbQBhAGkAbABUAG8ATwB3AG4AZQByAHMAIgA6AGYAYQBsAHMAZQB9AA=="
+                    },
+                    "operator": "GreaterThan",
+                    "threshold": 2,
+                    "windowSize": "PT1H"
+                },
+                "action": {
+                    "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+                    "sendToServiceOwners": true,
+                    "customEmails": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[parameters('sites_dsrgab19_dev_name')]",
+            "location": "West US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_dsrgab19_dev_sf_name'))]"
+            ],
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_dsrgab19_dev_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_dsrgab19_dev_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_dsrgab19_dev_sf_name'))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_dsrgab19_dev_name'), '/web')]",
+            "location": "West US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_dsrgab19_dev_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "phpVersion": "5.6",
+                "pythonVersion": "",
+                "nodeVersion": "",
+                "linuxFxVersion": "",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$dsrgab19-dev",
+                "scmType": "None",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "appCommandLine": "",
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false,
+                        "virtualDirectories": null
+                    }
+                ],
+                "winAuthAdminState": 0,
+                "winAuthTenantState": 0,
+                "customAppPoolIdentityAdminState": false,
+                "customAppPoolIdentityTenantState": false,
+                "loadBalancing": "LeastRequests",
+                "routingRules": [],
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetName": "",
+                "siteAuthEnabled": false,
+                "siteAuthSettings": {
+                    "enabled": null,
+                    "unauthenticatedClientAction": null,
+                    "tokenStoreEnabled": null,
+                    "allowedExternalRedirectUrls": null,
+                    "defaultProvider": null,
+                    "clientId": null,
+                    "clientSecret": null,
+                    "clientSecretCertificateThumbprint": null,
+                    "issuer": null,
+                    "allowedAudiences": null,
+                    "additionalLoginParams": null,
+                    "isAadAutoProvisioned": false,
+                    "googleClientId": null,
+                    "googleClientSecret": null,
+                    "googleOAuthScopes": null,
+                    "facebookAppId": null,
+                    "facebookAppSecret": null,
+                    "facebookOAuthScopes": null,
+                    "twitterConsumerKey": null,
+                    "twitterConsumerSecret": null,
+                    "microsoftAccountClientId": null,
+                    "microsoftAccountClientSecret": null,
+                    "microsoftAccountOAuthScopes": null
+                },
+                "localMySqlEnabled": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2016-08-01",
+            "name": "[concat(parameters('sites_dsrgab19_dev_name'), '/', parameters('sites_dsrgab19_dev_name'), '.azurewebsites.net')]",
+            "location": "West US 2",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_dsrgab19_dev_name'))]"
+            ],
+            "properties": {
+                "siteName": "dsrgab19-dev",
+                "hostNameType": "Verified"
+            }
+        }
+    ]
+}

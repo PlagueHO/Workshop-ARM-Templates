@@ -226,39 +226,71 @@ Resource Group to host a simple web application.
 
    ![Create a Web App](images/portalcreatewebapp.png "Create a Web App")
 
-1. Set an **App name** to one that will be **Globally Unique**. For example
-   `dsrgab19-dev`.
+1. Set an **App name** to one that will be **Globally Unique**. Suggest
+   using your initials appended with `gab19-dev`. E.g. `dsrgab19-dev`.
 1. Select `Create new` under **Resource Group** and enter the same name
    as the **App Name** but append '-rg'. For example `dsrgab19-dev-rg`.
 1. Set **OS** to `Windows`.
-1. Set **Publish** to `Docker Image`.
+1. Set **Publish** to `Code`.
 
    ![Create a Web App Settings](images/portalcreatewebappsettings.png "Create a Web App Settings")
 
-1. Click `Configure Container`.
-1. Select `Single Container (Preview)`.
-1. Select `Private Registry`.
-1. Set **Server URL** to `https://mcr.microsoft.com`.
-1. Set **Image and Optional Tag** to `mcr.microsoft.com/dotnet/core/samples:aspnetapp`.
+1. Click `App Service Plan/Location` to configure the App Service Plan.
+1. Click `Create New`.
 
-   ![Create a Web App Container](images/portalcreatewebappcontainer.png "Create a Web App Container")
+   ![Create a Web App Service Plan](images/portalcreatewebappserviceplan.png "Create a Web App Service Plan")
+
+1. Set **App Service Plan** to the **App Name** prepended with `-sf`. E.g.
+   `dsrgab19-dev-sf`.
+   This is recommmended as it makes consistency easier when generating the
+   template.
+1. Set **Location** to `West US 2`.
+1. Set **Pricing Tier** to `S1`.
+
+   ![Configure Web App Service Plan](images/portalcreatewebappconfiguresf.png "Configure Web App Service Plan")
+
+1. Click `OK`.
+1. Click `Application Insights`.
+1. Set **Application Insights** to `Enable`.
+1. Select `Create new Resource`.
+1. Set **New resource name** to the **App Name** prepended with `-ai`. E.g.
+   `dsrgab19-dev-ai`.
+   This is recommmended as it makes consistency easier when generating the
+   template.
+1. Set **Location** to `West US 2`.
+
+   ![Configure App Insights](images/portalcreatewebappconfigureai.png "Configure App Insights")
+
+1. Click `Automation options` to see the exported ARM template that describes
+   these resources.
+   We are not going to use this template in this lab, but we'll save it anyway
+   for reference purposes.
+   Instead, we are going to use the template exported at deployment time.
+
+   ![View Create Time Template](images/portalwebappviewcreatetimetemplate.png "View Create Time Template")
+
+1. If you want to store this template for review later, click `Download`.
+   We will not be using this template in the Lab.
+1. Click the `X` button to close the **Template**.
+
+   ![Close View Create Time Template](images/portalcreatewebappclosetemplateview.png "Close View Create Time Template")
 
 1. Click `Apply`.
+
+   ![Web App Create](images/portalcreatewebappnow.png "Web App Create")
+
 1. Click `Create`.
 
-Your _App Service_ hosting a Windows Server Container will be deployed.
-It will take a few minutes for the service to be provisioned.
-Once it has been provisioned you can check the _App Service_ is serving
+Your _App Service_  Web App will be deployed.
+It will take a few minutes for the service and supporting resources
+to be provisioned.
+Once it has been provisioned you can check the _App Service_ is up
 by opening your _App Service_ and clicking the `URL`.
 
    ![Test Web App](images/portaltestwebapp.png "Test Web App")
 
 We'll leave this up to you to determine the best way to locate your
 _App Service_.
-
-Note: If you get this error, just wait a minute and try again:
-
-   ![Web App Starting Up](images/webappstartingup.png "Web App Starting Up")
 
 You should see this page when the App Service has started up:
 
@@ -282,7 +314,7 @@ just export all the resources in the Resource Group.
 
 1. Click the Resource Group that was created to contain your App Service
    in _Part 2.1_.
-1. Click `Export Template`.
+1. Click `Export template`.
 
    ![Export Resource Group](images/portalexporttemplate.png "Export Resource Group")
 
@@ -304,7 +336,7 @@ just export all the resources in the Resource Group.
 
 The actual ARM Template is the `template.json` file in the zip file.
 The other files are scripts that can be used to deploy the ARM Template
-as well as a parameters file for the template.
+as well as an optional parameters file for the template.
 
 ### Part 2.3 - Edit an Exported ARM Template
 
