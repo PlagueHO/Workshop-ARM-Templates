@@ -22,6 +22,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [What You Will Need](#what-you-will-need)
 - [What You Will Learn](#what-you-will-learn)
 - [Prerequisite Knowledge](#prerequisite-knowledge)
+- [Workshop Scenario](#workshop-scenario)
 - [Section 1 - Getting Setup](#section-1---getting-setup)
 - [Part 1.1 - Setting up Cloud Shell](#part-1.1---setting-up-cloud-shell) - 5 min
 - [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
@@ -67,6 +68,30 @@ You'll learn the basics in the following skills:
 - How to create basic ARM templates
 - How to deploy ARM templates
 - How to use Visual Studio Code to edit ARM templates.
+
+## Workshop Scenario
+
+In this workshop we want to create three almost identical environments for
+hosting Web Apps: _Dev_, _Test_ and _Prod_.
+
+Each environment will be in its own Resource Group and will contain:
+
+- App Service Plan - for running the App Service
+- App Service - for hosting the Web App
+- Application Insights - for monitoring the Web App
+
+The environments will be identical except for the resource names and the
+_Prod_ environment will be an `S2` plan instead of an `S1`.
+
+We will create the first Dev environment using the Azure Portal and use this
+to export an ARM template.
+
+We will then customize the ARM template by cleaning it up and adding parameters.
+
+Once the ARM template has been customized, we will use it to deploy the
+_Test_ and _Prod_ environments.
+
+![Workshop Scenario](images/workshopscenario.png "Workshop Scenario")
 
 ## Section 1 - Getting Setup
 
