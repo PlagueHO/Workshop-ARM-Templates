@@ -37,8 +37,12 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 3.3 - Re-deploy a Template Deployment](#part-3.3---re-deploy-a-template-deployment)
 - [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-cloud-shell)
 - [Part 3.5 - Challenge: Deploy from Storage Account](#part-3.5---challenge:-deploy-from-storage-account)
-- [Section 4 - Advanced Techniques and Functions](#section-4---advanced-techniques-and-functions)
-- [Part 4.1 - Create Multiple Instances](#part-4.1---create-multiple-instances)
+- [Section 4 - Important Techniques and Functions](#section-4---important-techniques-and-functions)
+- [Part 4.1 - Special Resources](#part-4.1---special-resources)
+- [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
+- [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
+- [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
+- [Part 4.5 - Create Multiple Instances](#part-4.5---create-multiple-instances)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -100,6 +104,16 @@ Once the ARM template has been customized, we will use it to deploy the
 _Test_ and _Prod_ environments.
 
 ![Workshop Scenario](images/workshopscenario.png "Workshop Scenario")
+
+## Challenges
+
+Throughout this workshop are **Challenges**.
+These are additional tasks that you can undertake to increase your learning.
+These challenges will appear like this:
+
+> Challenge x.x.x: Do something or other.
+
+If you get stuck with a challenge, you can find an example solution in the [/src/challengesolutions/ folder](/src/challengesolutions/).
 
 ## Presentation
 
@@ -798,19 +812,270 @@ For this challenge:
    to the **Blob** - see [az deployment create](https://docs.microsoft.com/en-us/cli/azure/deployment?view=azure-cli-latest#az-deployment-create)
    command.
 
-## Section 4 - Advanced Techniques and Functions
+## Section 4 - Important Techniques and Functions
 
 In this section we'll show some other techniques available to make ARM
 Templates even more powerful.
 
-### Part 4.1 - Create Multiple Instances
+In this section we will use the skills from previous parts to quickly
+review and deploy ARM templates showing these important techniques.
+
+- [Part 4.1 - Special Resources](#part-4.1---special-resources)
+- [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
+- [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
+- [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
+
+### Part 4.1 - Special Resources
+
+> Estimated Completion Time: 3 min
+
+It is possible to deploy several other Azure components using ARM
+templates that are not typically thought of as Resources:
+
+- Create Deployment (demonstrated below)
+- Create Resource Groups (demonstrated below)
+- Create and assign Policies
+- Assign role to Subscription, Resource or Resource Group
+
+See the [create resource groups and resources at the subscription level](https://docs.microsoft.com/en-us/azure/azure-resource-manager/deploy-to-subscription) page.
+
+1. Review the [/src/important/resourcegroup.json](/src/important/resourcegroup.json) template.
+
+    In this template we are creating a `Resource Group` and then a `Deployment`
+    record to create a Storage Account within the resource group.
+
+    We are also using a `dependsOn` to ensure the Storage Account is deployed
+    after the Resource Group is deployed.
+
+    ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+      "contentVersion": "1.0.0.1",
+      "parameters": {
+         "appName": {
+               "maxLength": 8,
+               "type": "string"
+         },
+         "appLocation": {
+               "type": "string"
+         },
+         "environment": {
+               "allowedValues": [ "dev", "test", "prod"],
+               "type": "string"
+         }
+      },
+      "variables": {
+         "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
+         "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]"
+      },
+      "resources": [
+         {
+               "type": "Microsoft.Resources/resourceGroups",
+               "apiVersion": "2018-05-01",
+               "location": "[parameters('appLocation')]",
+               "name": "[variables('resourceGroupName')]",
+               "properties": {}
+         },
+         {
+               "type": "Microsoft.Resources/deployments",
+               "apiVersion": "2018-05-01",
+               "name": "storageDeployment",
+               "resourceGroup": "[variables('resourceGroupName')]",
+               "dependsOn": [
+                  "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+               ],
+               "properties": {
+                  "mode": "Incremental",
+                  "template": {
+                     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                     "contentVersion": "1.0.0.0",
+                     "parameters": {},
+                     "variables": {},
+                     "resources": [
+                           {
+                              "type": "Microsoft.Storage/storageAccounts",
+                              "apiVersion": "2017-10-01",
+                              "name": "[variables('storageAccountName')]",
+                              "location": "[parameters('appLocation')]",
+                              "kind": "StorageV2",
+                              "sku": {
+                                 "name": "Standard_LRS"
+                              }
+                           }
+                     ],
+                     "outputs": {}
+                  }
+               }
+         }
+      ],
+      "outputs": {}
+   }
+    ```
+
+1. Deploy the [/src/important/resourcegroup.json](/src/important/multistoragetemplate.json)
+   template using either the Portal or Cloud Shell.
+
+   ```powershell
+   $appName = '<Unique App name - 8 characters or less>'
+   $location = 'West US 2'
+   New-AzDeployment -TemplateFile ./resourcegroup.json -Location $location -appName $appName -appLocation $location -environment 'dev'
+   ```
+
+> Challenge 4.1.1: Modify the ARM template above to also assign your user account
+> with the `contributor role` to the Resource Group above.
+>
+> Challenge 4.1.2: Create an ARM template to define and assign a policy that prevents
+> creation of any resources in a location other than `Australia East`.
+
+### Part 4.2 - Define Resource Dependencies
+
+A fundamental principle of ARM templates and Azure resources in general is that resources
+often depend on each other.
+For example, an Azure Virtual Machine requires an Azure Storage Account to hold the
+virtual hard disk files it requires.
+Therefore, ARM templates need to be constructed so that Azure knows which resources
+depend on each other.
+
+There are three principle techniques involved:
+
+- [The dependsOn property of the resource](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-define-dependencies#dependson)
+- [Child resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-define-dependencies#dependson)
+- [Reference() and listKeys() functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-define-dependencies#child-resources)
+
+See [define the order for deploying resources in Azure Resource Manager Templates](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-define-dependencies) for more information.
+
+In this part we will deploy an ARM Template with a single resource defined
+to deploy 4 storage accounts. It will deploy 2 at a time to reduce the
+deployment time.
+
+1. Review the [/src/cleaned/template.json](/src/important/template.json) template.
+
+   Note: Refer to line 68 for an example of using a `dependsOn`.
+
+1. Review the [/src/important/childresources.json](/src/important/childresources.json) template.
+
+   ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+         "appName": {
+               "maxLength": 8,
+               "type": "string"
+         },
+         "environment": {
+               "allowedValues": ["dev", "test", "prod"],
+               "type": "string"
+         },
+         "administratorLogin": {
+               "type": "string"
+         },
+         "administratorLoginPassword": {
+               "type": "securestring"
+         },
+         "databaseName": {
+               "type": "string"
+         }
+      },
+      "variables": {
+         "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+      },
+      "resources": [{
+         "name": "[variables('sqlserverName')]",
+         "type": "Microsoft.Sql/servers",
+         "location": "[resourceGroup().location]",
+         "tags": {
+               "displayName": "SqlServer"
+         },
+         "apiVersion": "2014-04-01-preview",
+         "properties": {
+               "administratorLogin": "[parameters('administratorLogin')]",
+               "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+         },
+         "resources": [{
+               "name": "[parameters('databaseName')]",
+               "type": "databases",
+               "location": "[resourceGroup().location]",
+               "tags": {
+                  "displayName": "Database"
+               },
+               "apiVersion": "2014-04-01-preview",
+               "dependsOn": [
+                  "[variables('sqlserverName')]"
+               ],
+               "properties": {
+                  "edition": "Basic",
+                  "collation": "SQL_Latin1_General_CP1_CI_AS",
+                  "maxSizeBytes": "1073741824",
+                  "requestedServiceObjectiveName": "Basic"
+               }
+         }]
+      }],
+      "outputs": {}
+   }
+   ```
+
+   > Challenge 4.2.1 : Deploy the [/src/important/childresources.json](/src/important/childresources.json)
+   > template using Az PowerShell in the Cloud Shell.
+   > Hint: The **administratorLoginPassword** parameter takes a `SecureString` parameter.
+
+1. Review the [/src/cleaned/virtualmachine.json](/src/important/virtualmachine.json) template.
+
+   Note: Refer to line 166 for an example of using a `reference()`.
+
+### Part 4.5 - Create Multiple Instances
 
 One technique that is very useful is the ability for a resource definition
 can be used to [create multiple instances](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-multiple) of the resource.
 
-1. Review the [/src/advanced/multistoragetemplate.json](/src/advanced/multistoragetemplate.json) template.
-2. Deploy the [/src/advanced/multistoragetemplate.json](/src/advanced/multistoragetemplate.json)
+In this part we will deploy an ARM Template with a single resource defined
+to deploy 4 storage accounts. It will deploy 2 at a time to reduce the
+deployment time.
+
+1. Review the [/src/important/multistoragetemplate.json](/src/important/multistoragetemplate.json) template.
+
+    ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+         "storageAccountName": {
+               "type": "string"
+         },
+         "accountCount": {
+               "defaultValue": 4,
+               "type": "int"
+         },
+         "batchSize": {
+               "defaultValue": 2,
+               "type": "int"
+         }
+      },
+      "resources": [{
+         "apiVersion": "2016-01-01",
+         "type": "Microsoft.Storage/storageAccounts",
+         "name": "[concat(parameters('storageAccountName'),copyIndex())]",
+         "location": "[resourceGroup().location]",
+         "sku": {
+               "name": "Standard_LRS"
+         },
+         "kind": "Storage",
+         "properties": {},
+         "copy": {
+               "name": "storagecopy",
+               "count": "[parameters('accountCount')]",
+               "mode": "Serial",
+               "batchSize": "[parameters('batchSize')]"
+         }
+      }],
+      "outputs": {}
+   }
+    ```
+
+1. Deploy the [/src/important/multistoragetemplate.json](/src/important/multistoragetemplate.json)
    template using either the Portal or Cloud Shell.
+
+| Challenge 4.5.1: Use `AzCli` to execute the deployment.
 
 ## Section 5 - Cleanup After the Workshop
 

@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "metadata": {
+        "comments": "$userId = (Get-AzAdUser -DisplayName 'Joe Bloggs').Id; $roleId = (Get-AzRoleDefinition -Name 'Contributor').Id; New-AzDeployment -TemplateFile ./challenge411.json -Location 'West US 2' -appName 'dsrgab19' -environment 'dev' -appLocation 'West US 2' -principalId $userId -roleDefinitionId $roleId"
+    },
+    "contentVersion": "1.0.0.1",
+    "parameters": {
+        "appName": {
+            "maxLength": 8,
+            "type": "string"
+        },
+        "appLocation": {
+            "type": "string"
+        },
+        "environment": {
+            "allowedValues": [ "dev", "test", "prod"],
+            "type": "string"
+        },
+        "principalId": {
+            "type": "string"
+        },
+        "roleDefinitionId": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
+        "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('appLocation')]",
+            "name": "[variables('resourceGroupName')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "storageDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "apiVersion": "2017-10-01",
+                            "name": "[variables('storageAccountName')]",
+                            "location": "[parameters('appLocation')]",
+                            "kind": "StorageV2",
+                            "sku": {
+                                "name": "Standard_LRS"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Authorization/roleAssignments",
+                            "name": "[guid(parameters('principalId'), deployment().name)]",
+                            "apiVersion": "2017-09-01",
+                            "properties": {
+                                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
+                                "principalId": "[parameters('principalId')]",
+                                "scope": "[concat(subscription().id, '/resourceGroups/', variables('resourceGroupName'))]"
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
