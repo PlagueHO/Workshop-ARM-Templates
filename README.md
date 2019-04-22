@@ -38,6 +38,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-cloud-shell)
 - [Part 3.5 - Challenge: Deploy from Storage Account](#part-3.5---challenge:-deploy-from-storage-account)
 - [Section 4 - Advanced Techniques and Functions](#section-4---advanced-techniques-and-functions)
+- [Part 4.1 - Create Multiple Instances](#part-4.1---create-multiple-instances)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -777,6 +778,8 @@ You will be able to monitor the
 
 ## Part 3.5 - Challenge: Deploy from Storage Account
 
+> Estimated Completion Time: 10 min
+
 A common pattern for using ARM Templates in larger environments is to store them
 in an _Azure Storage Account_.
 You would then adjust the PowerShell commands from _Step 3.4_ to reference a
@@ -796,6 +799,18 @@ For this challenge:
    command.
 
 ## Section 4 - Advanced Techniques and Functions
+
+In this section we'll show some other techniques available to make ARM
+Templates even more powerful.
+
+### Part 4.1 - Create Multiple Instances
+
+One technique that is very useful is the ability for a resource definition
+can be used to [create multiple instances](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-multiple) of the resource.
+
+1. Review the [/src/advanced/multistoragetemplate.json](/src/advanced/multistoragetemplate.json) template.
+2. Deploy the [/src/advanced/multistoragetemplate.json](/src/advanced/multistoragetemplate.json)
+   template using either the Portal or Cloud Shell.
 
 ## Section 5 - Cleanup After the Workshop
 

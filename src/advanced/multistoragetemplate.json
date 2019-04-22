@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "type": "string"
+        },
+        "accountCount": {
+            "defaultValue": 4,
+            "type": "int"
+        },
+        "batchSize": {
+            "defaultValue": 2,
+            "type": "int"
+        }
+    },
+    "resources": [{
+        "apiVersion": "2016-01-01",
+        "type": "Microsoft.Storage/storageAccounts",
+        "name": "[concat(parameters('storageAccountName'),copyIndex())]",
+        "location": "[resourceGroup().location]",
+        "sku": {
+            "name": "Standard_LRS"
+        },
+        "kind": "Storage",
+        "properties": {},
+        "copy": {
+            "name": "storagecopy",
+            "count": "[parameters('accountCount')]",
+            "mode": "Serial",
+            "batchSize": "[parameters('batchSize')]"
+        }
+    }],
+    "outputs": {}
+}
