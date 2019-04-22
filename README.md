@@ -31,6 +31,11 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 2.1 - Create Resources in the Portal](#part-2.1---create-resources-in-the-portal)
 - [Part 2.2 - Export an ARM Template](#part-2.2---export-an-arm-template)
 - [Part 2.3 - Edit an Exported ARM Template](#part-2.3---edit-an-exported-arm-template)
+- [Section 3 - Deploying an ARM Template](#section-3---deploying-an-arm-template)
+- [Part 3.1 - Visualize the ARM Template](#part-3.1---visualize-the-arm-template)
+- [Part 3.2 - Deploy the ARM Template using the Portal](#part-3.2---deploy-the-arm-template-using-the-portal)
+- [Part 3.3 - Re-deploy a Template Deployment](#part-3.3---re-deploy-a-template-deployment)
+- [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-the-cloud-shell)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -53,9 +58,9 @@ To complete this workshop you'll need the following:
 
 ## Prerequisite Knowledge
 
-- Basic knowledge of web application hosting on Windows or Linux
-- Basic knowledge of text editors (Visual Studio Code)
-- Basic knowledge of using text based consoles (PowerShell, Cmd or Bash)
+- Basic knowledge of web application hosting on Windows or Linux.
+- Basic knowledge of text editors (Visual Studio Code).
+- Basic knowledge of using text based consoles (PowerShell, Cmd or Bash).
 
 ## What You Will Learn
 
@@ -365,16 +370,27 @@ as well as an optional parameters file for the template.
 
 ### Part 2.3 - Edit an Exported ARM Template
 
-> Estimated Completion Time: 10 min
+> Estimated Completion Time: 15 min
 
-Once we've exported a template we typically need to do two things:
+Once we've exported a template we should do a few things to make the
+template easier to use and read:
 
-- Clean up the template by removing any uneccessary properties.
-- Add parameters for any properties we want to set when deploying the
+- Add _parameters_ for any properties we want to set when deploying the
   template.
+- Add _variables_ for resource names that are generated from the parameters.
+- Change the resources to use the _variables_.
+- Removing any resources that are all defaults.
+- Removing any properties that are set to defaults.
 
 We will do this by editing the `template.json` file in _Visual Studio
 Code_.
+
+> You might choose to omit some of the clean up of an exported ARM template.
+> However, tidy ARM templates are much easier to debug, modify and manage.
+> It might take a little bit more time to tidy up with variables and removing
+> default properties and resources, but it will be worth it in the long run.
+> This is just an example of how we might want to customize the ARM template.
+> There are many different approaches depdending on what our needs are.
 
 1. Open _Visual Studio Code_.
 1. Select `Open Folder` from the `File` menu.
@@ -383,7 +399,289 @@ Code_.
 
    ![Edit Template in Visual Studio Code](images/visualstudiocdeopentemplate.png "Edit Template in Visual Studio Code")
 
-1.
+   **If you want to skip the manual editing of this file and just
+   copy the completed cleaned up version, you can find it in the file
+   [/src/cleaned/templates.json]([/src/cleaned/templates.json]).**
+
+1. Remove the exported parameters and replace with more useful parameters.
+   Replace the content of `Parameters` section with:
+
+   ```json
+        "appName": {
+            "type": "string"
+        },
+        "environment": {
+            "allowedValues": [ "dev", "test", "prod"],
+            "type": "string"
+        },
+        "appServiceCapacity": {
+            "defaultValue": 1,
+            "type": "int"
+        },
+        "appServiceTier": {
+            "allowedValues": [ "Standard" ],
+            "defaultValue": "Standard",
+            "type": "string"
+        },
+        "appServiceSku": {
+            "allowedValues": [ "S1", "S2", "S3"],
+            "defaultValue": "S1",
+            "type": "string"
+        }
+   ```
+
+   ![Replace Parameters Section](images/armtemplatenewparameters.png "Replace Parameters Section")
+
+1. Add variables to hold the names of our resources.
+   This helps ensure our names meet naming standards and are consistent.
+   Add this content to the `Variables` section:
+
+   ```json
+        "appInsightsName": "[concat(parameters('appname'),'-',parameters('environment'),'-ai')]",
+        "appServicePlanName": "[concat(parameters('appname'),'-',parameters('environment'),'-sf')]",
+        "appServiceName": "[concat(parameters('appname'),'-',parameters('environment'))]"
+   ```
+
+   ![Replace Variables Section](images/armtemplatenewvariables.png "Replace Variables Section")
+
+1. Remove uneeded resources that were just defaults.
+   - Remove the `"type": "microsoft.insights/alertrules"` resource. This
+     resource is creates a default alert for the web app but isn't needed
+     in this workshop.
+   - Remove the `"type": "Microsoft.Web/sites/config"` resource. This resource
+     just contains the default configuration for the website. Unless we've
+     changed the website configuration it is not needed.
+   - Remove the `"type": "Microsoft.Web/sites/hostNameBindings"` resource. This
+     resource just contains the default binding for the website. Unless we've
+     changed the website bindings it is not needed.
+
+   We should just end up with 3 resources left in the `Resources` section:
+   - `"type": "microsoft.insights/components"`
+   - `"type": "Microsoft.Web/serverfarms"`
+   - `"type": "Microsoft.Web/sites"`
+
+1. Edit the `Microsoft.Insights/components` resource:
+
+   - Replace `type` with `"Microsoft.Insights/components"` - this is to correct the   case.
+   - Replace `name` with `"[variables('appInsightsName')]"`.
+   - Replace `location` with `"[resourceGroup().location]"`.
+
+   The resource `Microsoft.Insights/components` should look like
+   this:
+
+   ```json
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2015-05-01",
+            "name": "[variables('appInsightsName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+   ```
+
+   ![Replace App Insights Section](images/armtemplatenewappinsights.png "Replace App Insights Section")
+
+1. Edit the `Microsoft.Web/serverfarms` resource:
+
+   - Replace `name` with `"[variables('appServicePlanName')]"`.
+   - Replace `location` with `"[resourceGroup().location]"`.
+   - Replace `sku.name` property with `"[parameters('appServiceSku')]"`.
+   - Replace `sku.tier` property with `"[parameters('appServiceTier')]"`.
+   - Replace `sku.capacity` property with `"[parameters('appServiceCapacity')]"`.
+   - Replace `properties.name` property with `"[variables('appServicePlanName')]"`.
+
+   The resource `Microsoft.Web/serverfarms` should look like
+   this:
+
+   ```json
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-09-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('appServiceSku')]",
+                "tier": "[parameters('appServiceTier')]",
+                "capacity": "[parameters('appServiceCapacity')]"
+            },
+            "kind": "app",
+            "properties": {
+                "name": "[variables('appServicePlanName')]",
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+   ```
+
+   ![Replace Server Farms Section](images/armtemplatenewserverfarms.png "Replace Server Farms Section")
+
+1. Edit the `Microsoft.Web/sites` resource:
+
+   - Replace `name` with `"[variables('appServiceName')]"`.
+   - Replace `location` with `"[resourceGroup().location]"`.
+   - Replace `dependsOn` with `"[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"`.
+   - Replace `properties.serverFarmId` property with `"[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"`.
+
+   The resource `Microsoft.Web/sites` should look like
+   this:
+
+   ```json
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[variables('appServiceName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            }
+   ```
+
+   ![Replace Web Sites Section](images/armtemplatenewwebsites.png "Replace Web Sites Section")
+
+   > Important: There should be no text underscored with red lines in the file.
+   > If there are then you may have copied or edited something incorrectly.
+   > You can just copy the final file if you want from [/src/cleaned/templates.json]([/src/cleaned/templates.json]).
+   >
+   > ![An ARM Template Error](images/armtemplateerror.png "An ARM Template Error")
+   >
+
+1. Save the cleaned up `template.json` file.
+
+Your ARM template is now completed, parameterized and ready to be used to deploy
+our new environments.
+
+## Section 3 - Deploying an ARM Template
+
+We are now ready to deploy the ARM Template created in the previous section.
+
+### Part 3.1 - Visualize the ARM Template
+
+Before deploying an ARM Template that we've just created or one that we
+might have downloaded from the Azure Quickstart Gallery it is useful
+to visualize it.
+
+> Visualizing ARM templates that you have found on the internet or that
+> are hosted in the Azure Quickstart Gallery is recommended to ensure that
+> you're aware of the resources you will be deploying.
+
+1. Open the [http://armviz.io/](http://armviz.io/) web site.
+1. Select the `File` menu and choose `Open Local Template`.
+1. This will show us the resources that will be deployed.
+
+![Visualizing an ARM Template](images/armtemplateviz.png "Visualizing an ARM Template")
+
+### Part 3.2 - Deploy the ARM Template using the Portal
+
+A quick and easy way to test an ARM Template you've created is via the
+`Template Deployment` in the portal.
+This is not an ideal approach for protected environments like Production
+as it requires high level of access to be granted.
+Rather, it is recommended to use automation or CI/CD tools like
+Azure DevOps.
+
+1. Open the [Azure Portal](https://portal.azure.com).
+1. Click `Resource Groups` in the Azure Portal.
+
+   ![Open Resource Groups in Portal](images/portalopenresourcegroup.png "Open Resource Groups in Portal")
+
+1. Click `Add` to create a new Resource Group.
+1. Set **Resource Group** to the same name as the Resource group
+   created in **Part 2.1** except replace the environment with `test`.
+   For example `dsrgab19-test-rg`.
+1. Set the **Region** to `West US 2`.
+1. Click `Review and Create`.
+
+   ![Create Resource Group in Portal](images/portalcreateresourcegroup.png "Create Resource Group in Portal")
+
+1. Click `Create`.
+   The Resource Group will be created after a few seconds.
+1. Click `Create a Resource`:
+
+   ![Create a Resource](images/portalcreatearesource.png "Create a Resource")
+
+1. Enter `Template Deployment` in the search box.
+
+   ![Find Template Deployment](images/portalfindtemplatedeployment.png "Find Template Deployment")
+
+1. Click `Create`.
+
+   ![Create Template Deployment](images/portalcreatetemplatedeployment.png "Create Template Deployment")
+
+1. Click `Build your own template in the Editor`.
+1. Click `Load File`.
+1. Locate the file created in `Part 2.3` (or use the one in this repo [/src/cleaned/template.json](/src/cleaned/template.json)).
+
+   ![Edit Template Deployment](images/portaltemplatedeploymentedit.png "Edit Template Deployment")
+
+1. Click `Save`.
+1. Set the **Resource Group** to the resource group created earlier.
+1. Set the **App Name** to the value used in earlier parts. E.g. `dsrgab19`.
+1. Set the **Environment** to `test`.
+1. Tick `I agree to the terms and conditions as stated above`.
+   You may need to scroll down to see it.
+1. Click `Purchase`.
+
+   ![Start Template Deployment](images/portaltemplatedeploymentstart.png "Start Template Deployment")
+
+1. The deployment will take a few moments to start.
+   You can keep an eye on the progress in the portal:
+
+   ![Template Deployment Progress](images/portaldeploymentprogress.png "Template Deployment Progress")
+
+Once the deployment has completed the resources will appear in the Resource Group.
+The web site will also be available.
+
+### Part 3.3 - Re-deploy a Template Deployment
+
+One of the great features of Azure is the ability to re-deploy a previous deployment.
+For example, if a resource becomes corrupt or is accidentaly deleted it can
+be restored by executing a _Re-deploy_, as long it has not been manually changed
+since the last deployment.
+
+> Note: re-deploying a resource does mean the content will be restored, just the
+resource configuration that was contained in the ARM Template.
+
+As an exercise we will delete the App Service and then Re-deploy it.
+The exact steps to do this are left as an exercise for you to complete.
+
+1. Open the [Azure Portal](https://portal.azure.com).
+1. Navigate to the Resource Group created in `Part 3.2`.
+1. Delete the `App Service` resource.
+1. Select the `Deployments` on the Resource Group.
+1. Select the most recent `Deployment`.
+1. Click `Re-deploy`.
+
+   ![Template Re-deploy](images/portalredeploy.png "Template Re-deploy")
+
+1. Select the Resource Group created in `Part 3.2`.
+1. Tick `I agree to the terms and conditions as stated above`.
+   You may need to scroll down to see it.
+1. Click `Purchase`.
+
+The resource will be re-deployed.
+
+> Note: Any resources that already exist will not be re-deployed, but any
+> properties that are different in the ARM template will be updated.
+> If there is no differences at all then nothing will be changed.
+> This is known as _idempotancy_.
+
+### Part 3.4 - Deploy the ARM Template using Cloud Shell
+
+
 
 ## Section 5 - Cleanup After the Workshop
 

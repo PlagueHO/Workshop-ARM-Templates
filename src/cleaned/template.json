@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "type": "string"
+        },
+        "environment": {
+            "allowedValues": [ "dev", "test", "prod"],
+            "type": "string"
+        },
+        "appServiceCapacity": {
+            "defaultValue": 1,
+            "type": "int"
+        },
+        "appServiceTier": {
+            "allowedValues": [ "Standard" ],
+            "defaultValue": "Standard",
+            "type": "string"
+        },
+        "appServiceSku": {
+            "allowedValues": [ "S1", "S2", "S3"],
+            "defaultValue": "S1",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "appInsightsName": "[concat(parameters('appname'),'-',parameters('environment'),'-ai')]",
+        "appServicePlanName": "[concat(parameters('appname'),'-',parameters('environment'),'-sf')]",
+        "appServiceName": "[concat(parameters('appname'),'-',parameters('environment'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2015-05-01",
+            "name": "[variables('appInsightsName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2016-09-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('appServiceSku')]",
+                "tier": "[parameters('appServiceTier')]",
+                "capacity": "[parameters('appServiceCapacity')]"
+            },
+            "kind": "app",
+            "properties": {
+                "name": "[variables('appServicePlanName')]",
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2016-08-01",
+            "name": "[variables('appServiceName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            ],
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            }
+        }
+    ]
+}
