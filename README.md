@@ -35,7 +35,9 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 3.1 - Visualize the ARM Template](#part-3.1---visualize-the-arm-template)
 - [Part 3.2 - Deploy the ARM Template using the Portal](#part-3.2---deploy-the-arm-template-using-the-portal)
 - [Part 3.3 - Re-deploy a Template Deployment](#part-3.3---re-deploy-a-template-deployment)
-- [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-the-cloud-shell)
+- [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-cloud-shell)
+- [Part 3.5 - Challenge: Deploy from Storage Account](#part-3.5---challenge:-deploy-from-storage-account)
+- [Section 4 - Advanced Techniques and Functions](#section-4---advanced-techniques-and-functions)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
 
@@ -97,6 +99,10 @@ Once the ARM template has been customized, we will use it to deploy the
 _Test_ and _Prod_ environments.
 
 ![Workshop Scenario](images/workshopscenario.png "Workshop Scenario")
+
+## Presentation
+
+The presentation pack to go along with this workshop can be found [here](/ppt/using-azure-resource-manager-templates-to-supercharge-your-azure-deployments).
 
 ## Section 1 - Getting Setup
 
@@ -401,7 +407,7 @@ Code_.
 
    **If you want to skip the manual editing of this file and just
    copy the completed cleaned up version, you can find it in the file
-   [/src/cleaned/templates.json]([/src/cleaned/templates.json]).**
+   [/src/cleaned/template.json](/src/cleaned/template.json).**
 
 1. Remove the exported parameters and replace with more useful parameters.
    Replace the content of `Parameters` section with:
@@ -554,7 +560,7 @@ Code_.
 
    > Important: There should be no text underscored with red lines in the file.
    > If there are then you may have copied or edited something incorrectly.
-   > You can just copy the final file if you want from [/src/cleaned/templates.json]([/src/cleaned/templates.json]).
+   > You can just copy the final file if you want from [/src/cleaned/template.json](/src/cleaned/template.json).
    >
    > ![An ARM Template Error](images/armtemplateerror.png "An ARM Template Error")
    >
@@ -569,6 +575,8 @@ our new environments.
 We are now ready to deploy the ARM Template created in the previous section.
 
 ### Part 3.1 - Visualize the ARM Template
+
+> Estimated Completion Time: 1 min
 
 Before deploying an ARM Template that we've just created or one that we
 might have downloaded from the Azure Quickstart Gallery it is useful
@@ -585,6 +593,8 @@ to visualize it.
 ![Visualizing an ARM Template](images/armtemplateviz.png "Visualizing an ARM Template")
 
 ### Part 3.2 - Deploy the ARM Template using the Portal
+
+> Estimated Completion Time: 5 min
 
 A quick and easy way to test an ARM Template you've created is via the
 `Template Deployment` in the portal.
@@ -647,6 +657,8 @@ The web site will also be available.
 
 ### Part 3.3 - Re-deploy a Template Deployment
 
+> Estimated Completion Time: 3 min
+
 One of the great features of Azure is the ability to re-deploy a previous deployment.
 For example, if a resource becomes corrupt or is accidentaly deleted it can
 be restored by executing a _Re-deploy_, as long it has not been manually changed
@@ -681,7 +693,109 @@ The resource will be re-deployed.
 
 ### Part 3.4 - Deploy the ARM Template using Cloud Shell
 
+> Estimated Completion Time: 3 min
 
+A better way of deploying ARM templates is to use console tools such as
+Azure Cloud Shell.
+This makes it easier to take the same commands used in the console tools
+and use it in automation or CI/CD tools.
+
+1. Open _Visual Studio Code_.
+1. Select `Open Folder` from the `File` menu.
+1. Select the folder that contains the `template.json` created in _Section 2_.
+1. Select the `template.json` file.
+
+   **If you don't have a local copy of the `template.json` file, you can
+   download a copy from [/src/cleaned/template.json](/src/cleaned/template.json).**
+
+1. Press <kbd>F1</kbd> to bring up the Visual Studio command search.
+1. Enter `Cloud Shell` in the command search.
+1. Click the **Azure: Open PowerShell in Cloud Shell** command.
+
+   ![Visual Studio Code Cloud Shell Command](images/vscodesearchcloudshellcommand.png "Visual Studio Code Cloud Shell Command")
+
+1. A terminal will open in the Visual Studio Code window requiring you
+   to log in to Azure.
+
+   ![Visual Studio Code Cloud Shell Sign In](images/vscodecloudshellsignin.png "Visual Studio Code Cloud Shell Sign In")
+
+1. Click Sign In.
+1. A browser window will open where you will be asked to sign into your
+   Azure account.
+1. Sign into the Azure account you created the Cloud Shell in during
+   _Step 1.1_.
+1. Return to your Visual Studio Code window where you will now have a
+   Cloud Shell console ready to accept commands:
+
+   ![Visual Studio Code Cloud Shell Started](images/vscodecloudshellstarted.png "Visual Studio Code Cloud Shell Started")
+
+1. Press <kbd>F1</kbd> to bring up the Visual Studio command search.
+1. Enter `Cloud Shell` in the command search.
+1. Click the **Azure: Upload to Cloud Shell** command.
+
+   ![Visual Studio Code Cloud Shell Command Upload](images/vscodesearchcloudshellcommandupload.png "Visual Studio Code Cloud Shell Command Upload")
+
+1. Select the `template.json` file created in _Section 2_.
+   You can also upload the file by right clicking it in _Visual Studio
+   Code_ and selecting `Upload to Cloud Shell`.
+
+   ![Visual Studio Code Cloud Shell Command Upload](images/visualstudiocodeuploadtocloudshell.png "Visual Studio Code Cloud Shell Command Upload")
+
+1. Select the Cloud Shell terminal window in _Visual Studio Code_.
+1. Change to the _home_ folder of your Cloud Shell:
+
+   ```bash
+   cd ~
+   ```
+
+   This the location that the `Upload to Cloud Shell` will put files.
+
+1. Enter the command, setting the content of the string to the App
+   Service name specified in _Part 2.1_:
+
+   ```powershell
+   $appName = '<set to App Name>'
+   ```
+
+   E.g.
+
+   ```powershell
+   $appName = 'dsrgab19'
+   ```
+
+1. Enter the following PowerShell commands to create the Prod _Resource
+   Group_ and deploy the ARM template to it:
+
+   ```powershell
+   $environment = 'prod'
+   New-AzResourceGroup -Name "${appName}-${environment}-rg" -Location 'West US 2'
+   New-AzResourceGroupDeployment -ResourceGroupName "${appName}-${environment}-rg" -TemplateFile ./template.json -Environment $environment -AppName $appName
+   ```
+
+After a few seconds the deployment will be confirmed.
+You will be able to monitor the
+
+## Part 3.5 - Challenge: Deploy from Storage Account
+
+A common pattern for using ARM Templates in larger environments is to store them
+in an _Azure Storage Account_.
+You would then adjust the PowerShell commands from _Step 3.4_ to reference a
+URI.
+
+For this challenge:
+
+1. Use the Azure Quickstart Template for [101-storage-account-create](https://azure.microsoft.com/en-us/resources/templates/101-storage-account-create/)
+   to an _Azure Storage Account_.
+1. Upload the `template.json` to a **Blob** in the _Azure Storage Account_.
+1. Use [Azure Cloud Shell](https://shell.azure.com) to run _AzCli_
+   command to create a Resource Group - see [az group create](https://docs.microsoft.com/en-us/cli/azure/group?view=azure-cli-latest#az-group-create)
+   command.
+1. Use [Azure Cloud Shell](https://shell.azure.com) to run _AzCli_
+   command to deploy the ARM template from the **URI** of the file uploaded
+   to the **Blob** - see [az deployment create](https://docs.microsoft.com/en-us/cli/azure/deployment?view=azure-cli-latest#az-deployment-create)
+   command.
+
+## Section 4 - Advanced Techniques and Functions
 
 ## Section 5 - Cleanup After the Workshop
 
@@ -705,6 +819,8 @@ workshop resources and want to get rid of them to save some Azure credit.
 
 1. Enter the name of the Resource Group to confirm you want to delete
    it and Click Delete.
+
+> Repeat the above instructions for each resource group you created.
 
 ![Congratulations](images/congratulations.png "Congratulations")
 
