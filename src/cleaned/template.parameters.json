@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "value": "<set this to your app name>"
+        },
+        "environment": {
+            "value": "<set an environment>"
+        },
+        "appServiceCapacity": {
+            "value": 1
+        },
+        "appServiceTier": {
+            "value": "Standard"
+        },
+        "appServiceSku": {
+            "value": "S1"
+        }
+    }
+}

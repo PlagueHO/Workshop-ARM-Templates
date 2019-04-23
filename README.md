@@ -36,12 +36,15 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 3.2 - Deploy the ARM Template using the Portal](#part-3.2---deploy-the-arm-template-using-the-portal)
 - [Part 3.3 - Re-deploy a Template Deployment](#part-3.3---re-deploy-a-template-deployment)
 - [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-cloud-shell)
-- [Part 3.5 - Challenge: Deploy from Storage Account](#part-3.5---challenge:-deploy-from-storage-account)
+- [Part 3.5 - Deploy the ARM Template with Parameters File using Cloud Shell](#part-3.5---deploy-the-arm-template-with-parameters-file-using-cloud-shell)
+- [Challenge 3.6 - Deploy from Storage Account](#challenge-3.6---deploy-from-storage-account)
 - [Section 4 - Important Techniques and Functions](#section-4---important-techniques-and-functions)
 - [Part 4.1 - Special Resources](#part-4.1---special-resources)
 - [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
 - [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
 - [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
+- [Part 4.4.1 - Deploy a SQL Server with a Static ID](#part-4.4.1---deploy-a-sql-server-with-a-static-id)
+- [Challenge 4.4.2 - Deploy a SQL Server with a Dynamic ID](#challenge-4.4.2---deploy-a-sql-server-with-a-dynamic-id)
 - [Part 4.5 - Create Multiple Instances](#part-4.5---create-multiple-instances)
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
@@ -783,14 +786,151 @@ and use it in automation or CI/CD tools.
 
    ```powershell
    $environment = 'prod'
-   New-AzResourceGroup -Name "${appName}-${environment}-rg" -Location 'West US 2'
+   New-AzResourceGroup -Name "${appName}-${environment}-rg" -Location 'West US 2' -Force
    New-AzResourceGroupDeployment -ResourceGroupName "${appName}-${environment}-rg" -TemplateFile ./template.json -Environment $environment -AppName $appName
    ```
 
 After a few seconds the deployment will be confirmed.
-You will be able to monitor the
+You will be able to monitor the progress of the deployment using Azure Monitor.
 
-## Part 3.5 - Challenge: Deploy from Storage Account
+### Part 3.5 - Deploy the ARM Template with Parameters File using Cloud Shell
+
+> Estimated Completion Time: 3 min
+
+Rather than passing the ARM Template parameters into the command that executes
+the deployment, you can instead create a **parameters** file that will contain
+the parameters for the deployment. Using parameters file is a recommended pattern for _ensuring configuration is separated for code_.
+
+This makes it easy to have multiple parameters files stored in source control,
+one for each environment.
+
+A template parameters file typically looks like this:
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "value": "dsrgab19"
+        },
+        "environment": {
+            "value": "dev"
+        },
+        "appServiceCapacity": {
+            "value": 1
+        },
+        "appServiceTier": {
+            "value": "Standard"
+        },
+        "appServiceSku": {
+            "value": "S1"
+        }
+    }
+}
+```
+
+In this part we'll customize a parameters file and then use it to redeploy
+the resources.
+
+1. Open _Visual Studio Code_.
+1. Select `Open Folder` from the `File` menu.
+1. Create a new file called `template.parameters.json`.
+1. Copy the following into the `template.parameters.json` file:
+
+   ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+         "appName": {
+               "value": "<set this to your app name>"
+         },
+         "environment": {
+               "value": "<set an environment>"
+         },
+         "appServiceCapacity": {
+               "value": 1
+         },
+         "appServiceTier": {
+               "value": "Standard"
+         },
+         "appServiceSku": {
+               "value": "S1"
+         }
+      }
+   }
+   ```
+
+1. Set the **appName.value** to the App Service name specified in _Part 2.1_.
+1. Set the **environment.value** to the environment you want to deploy.
+
+   ![Visual Studio Code Cloud Edit Template Parameters](images/vscodetemplateparametersfile.png "Visual Studio Code Cloud Edit Template Parameters")
+
+1. Save the `template.parameters.json` file.
+1. Press <kbd>F1</kbd> to bring up the Visual Studio command search.
+1. Enter `Cloud Shell` in the command search.
+1. Click the **Azure: Open PowerShell in Cloud Shell** command.
+
+   ![Visual Studio Code Cloud Shell Command](images/vscodesearchcloudshellcommand.png "Visual Studio Code Cloud Shell Command")
+
+1. A terminal will open in the Visual Studio Code window requiring you
+   to log in to Azure.
+
+   ![Visual Studio Code Cloud Shell Sign In](images/vscodecloudshellsignin.png "Visual Studio Code Cloud Shell Sign In")
+
+1. Click Sign In.
+1. A browser window will open where you will be asked to sign into your
+   Azure account.
+1. Sign into the Azure account you created the Cloud Shell in during
+   _Step 1.1_.
+1. Return to your Visual Studio Code window where you will now have a
+   Cloud Shell console ready to accept commands:
+
+   ![Visual Studio Code Cloud Shell Started](images/vscodecloudshellstarted.png "Visual Studio Code Cloud Shell Started")
+
+1. Press <kbd>F1</kbd> to bring up the Visual Studio command search.
+1. Enter `Cloud Shell` in the command search.
+1. Click the **Azure: Upload to Cloud Shell** command.
+
+   ![Visual Studio Code Cloud Shell Command Upload](images/vscodesearchcloudshellcommandupload.png "Visual Studio Code Cloud Shell Command Upload")
+
+1. Select the `template.parameters.json` file that you just created.
+1. Select the Cloud Shell terminal window in _Visual Studio Code_.
+1. Change to the _home_ folder of your Cloud Shell:
+
+   ```bash
+   cd ~
+   ```
+
+   This the location that the `Upload to Cloud Shell` will put files.
+
+1. Enter the command, setting the content of the string to the App
+   Service name specified in _Part 2.1_:
+
+   ```powershell
+   $appName = '<set to App Name>'
+   ```
+
+   E.g.
+
+   ```powershell
+   $appName = 'dsrgab19'
+   ```
+
+1. Enter the following PowerShell commands to create the Prod _Resource
+   Group_ and deploy the ARM template to it:
+
+   ```powershell
+   $environment = 'prod'
+   New-AzResourceGroup -Name "${appName}-${environment}-rg" -Location 'West US 2' -Force
+   New-AzResourceGroupDeployment -ResourceGroupName "${appName}-${environment}-rg" -TemplateFile ./template.json -TemplateParameterFile ./template.parameters.json
+   ```
+
+After a few seconds the deployment will be confirmed.
+You will be able to monitor the progress of the deployment using Azure Monitor.
+
+## Challenge 3.6 - Deploy from Storage Account
 
 > Estimated Completion Time: 10 min
 
@@ -824,10 +964,11 @@ review and deploy ARM templates showing these important techniques.
 - [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
 - [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
 - [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
+- [Part 4.5 - Create Multiple Instances](#part-4.5---create-multiple-instances)
 
 ### Part 4.1 - Special Resources
 
-> Estimated Completion Time: 3 min
+> Estimated Completion Time: 10 min
 
 It is possible to deploy several other Azure components using ARM
 templates that are not typically thought of as Resources:
@@ -929,6 +1070,8 @@ See the [create resource groups and resources at the subscription level](https:/
 
 ### Part 4.2 - Define Resource Dependencies
 
+> Estimated Completion Time: 7 min
+
 A fundamental principle of ARM templates and Azure resources in general is that resources
 often depend on each other.
 For example, an Azure Virtual Machine requires an Azure Storage Account to hold the
@@ -1017,11 +1160,139 @@ deployment time.
 
    > Challenge 4.2.1 : Deploy the [/src/important/childresources.json](/src/important/childresources.json)
    > template using Az PowerShell in the Cloud Shell.
-   > Hint: The **administratorLoginPassword** parameter takes a `SecureString` parameter.
+   > Hint: The **administratorLoginPassword** parameter takes a `SecureString`
+   > parameter.
 
-1. Review the [/src/cleaned/virtualmachine.json](/src/important/virtualmachine.json) template.
+1. Review the [/src/important/virtualmachine.json](/src/important/virtualmachine.json) template.
 
    Note: Refer to line 166 for an example of using a `reference()`.
+
+   The `reference()` function will return information about resources that
+   are already deployed.
+
+### Part 4.3 - Modularize Templates
+
+> Estimated Completion Time: 7 min
+
+### Part 4.4 - Manage Secrets
+
+> Estimated Completion Time: 10 min
+
+The recommended way of providing access to secrets to ARM templates
+is at deploy time using secrets stored in an `Azure Key Vault`.
+
+> Important: For a Key Vault to be accessible by Azure Resource
+Manager during template deployments it must be **Enabled
+for Template Deployment**.
+
+There are two methods of referencing Key Vault secrets in an ARM
+template:
+
+- [Static ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-static-id)
+- [Dynamic ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
+
+We will first need an Azure Key Vault with a secret in it
+that we can use for both _Static ID_ and _Dynamic ID_ retrieval
+from ARM templates:
+
+1. Deploy an Azure Key Vault using the [/src/cleaned/keyvault.json](/src/important/keyvault.json)
+   template and Azure Cloud Shell.
+   This will also add a secret called `DatabasePassword` with a value
+   of `myp@ssword!1`.
+   The Key Vault will also be allowed to be configured with _Enabled for
+   Template Deployment_ which is required for it to be accessed by Azure
+   Resource Manager during template deployment.
+   We will also grant access
+
+   > Important: You wouldn't normally want to create a secret this way
+   > as it would mean storing the secret in your deployment code which
+   > is very insecure.
+   > There are patters available to eliminate this but they are beyond
+   > ths scope of this workshop.
+
+   ```powershell
+   $keyVaultBaseName = '<set this to 8 character string that will be unique>'
+   $environment = 'dev'
+   $administratorUPN = '<enter the e-mail address of a user to grant admin access to>'
+   $resourceGroupName = "${keyVaultBaseName}-${environment}-rg"
+   $keyVaultName = "${keyVaultBaseName}-${environment}-kv"
+   $userId = (Get-AzAdUser -UserPrincipalName $administratorUPN).Id
+   $secretName = 'DatabasePassword'
+   $secretValueSecure = ConvertTo-SecureString -String 'myp@ssword!1' -Force -AsPlainText
+   New-AzResourceGroup -Name $resourceGroupName -Location 'West US 2' -Force
+   New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile ./keyvault.json `
+      -KeyVaultName $keyVaultName `
+      -enabledForDeployment $true `
+      -enabledForTemplateDeployment $true `
+      -objectId $userId `
+      -keysPermissions List,Get `
+      -secretsPermissions List,Get `
+      -secretName $secretName `
+      -secretValue $secretValueSecure
+   ```
+
+   This should result in a Key Vault containing a secret like this:
+
+   ![Azure Key Vault with Secret](images/portalkeyvaultsecret.png "Azure Key Vault with Secret")
+
+#### Part 4.4.1 - Deploy a SQL Server with a Static ID
+
+When using a `Static ID` the ID of the Key Vault that is used in the
+ARM template is set in the ARM template.
+This means that the full ID of the Key Vault must be known and stored
+in the ARM template before hand.
+
+1. Review the [/src/important/sqlserver.json](/src/important/sqlserver.json)
+   template.
+1. Upload the [/src/important/sqlserver.json](/src/important/sqlserver.json)
+   file to the Cloud Shell.
+1. Edit the parameters file [/src/important/sqlserver.parameters.json](/src/important/sqlserver.parameters.json)
+1. Set the **appName.value** to the App Service name specified in _Part 2.1_.
+1. Set the **environment.value** to the environment you want to deploy.
+1. Set the **administratorLogin.value** to the username you want to use for the Administrator login.
+1. Set the **administratorLoginPassword.value** to the full ID of the Key Vault
+   to retrieve the secret from.
+   For example:
+
+   ```text
+   /subscriptions/058f62ab-a6f2-4045-b69b-e2cb35e1d15e/resourceGroups/abcgabkv-dev-rg/providers/Microsoft.KeyVault/vaults/abcgabkv-dev-kv
+   ```
+
+   The Subscription ID for your subscription can be obtained by running
+   this command in Cloud Shell:
+
+   ```powershell
+   Get-AzSubscription
+   ```
+
+1. Upload the [/src/important/sqlserver.parameters.json](/src/important/sqlserver.parameters.json)
+   file to the Cloud Shell.
+1. Execute the following PowerShell commands in Cloud Shell to deploy
+   the `template.json` using the parameters file `template.parameters.json`.
+
+   ```powershell
+   cd ~
+   New-AzResourceGroup -Name 'sqlserver-dev-rg' -Location 'West US 2' -Force
+   New-AzResourceGroupDeployment `
+      -ResourceGroupName 'sqlserver-dev-rg' `
+      -TemplateFile ./sqlserver.json `
+      -TemplateParameterFile ./sqlserver.parameters.json
+   ```
+
+The SQL Server will then be deployed using the password found in the
+**DatabasePassword** secret in the Key Value deployed in _Part 4.4_.
+
+#### Challenge 4.4.2 - Deploy a SQL Server with a Dynamic ID
+
+In this challenge you will deploy a SQL Server with the administrator
+password pulled from the Key Vault **DatabasePassword** deployed
+in _Part 4.4_.
+The ARM template should accept parameters for the Key Vault Name
+and Resource Group to pull the secret from.
+
+Refer to [this page](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
+for more information on how to pass the Key Vault identity storing
+the secret into the ARM Template.
 
 ### Part 4.5 - Create Multiple Instances
 

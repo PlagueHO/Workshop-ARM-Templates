@@ -1,0 +1,37 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "maxLength": 8,
+            "type": "string"
+        },
+        "environment": {
+            "allowedValues": ["dev", "test", "prod"],
+            "type": "string"
+        },
+        "administratorLogin": {
+            "type": "string"
+        },
+        "administratorLoginPassword": {
+           "type": "securestring"
+        }
+    },
+    "variables": {
+        "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+    },
+    "resources": [{
+        "name": "[variables('sqlserverName')]",
+        "type": "Microsoft.Sql/servers",
+        "location": "[resourceGroup().location]",
+        "tags": {
+            "displayName": "SqlServer"
+        },
+        "apiVersion": "2014-04-01-preview",
+        "properties": {
+            "administratorLogin": "[parameters('administratorLogin')]",
+            "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+        }
+    }],
+    "outputs": {}
+}

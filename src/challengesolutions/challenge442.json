@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "metadata": {
+        "comments": "New-AzDeployment -TemplateFile ./challenge442.json -Location 'West US 2' -appName 'dsrgab19' -appLocation 'West US 2' -environment 'dev' -administratorLogin 'dscottraynsford' -vaultResourceGroupName 'dsrgabkv-dev-rg' -vaultName 'dsrgabkv-dev-kv'"
+    },
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "maxLength": 8,
+            "type": "string"
+        },
+        "appLocation": {
+            "type": "string"
+        },
+        "environment": {
+            "allowedValues": ["dev", "test", "prod"],
+            "type": "string"
+        },
+        "administratorLogin": {
+            "type": "string"
+        },
+        "vaultSubscription": {
+            "defaultValue": "[subscription().subscriptionId]",
+            "type": "string"
+        },
+        "vaultResourceGroupName": {
+            "type": "string"
+        },
+        "vaultName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
+        "keyVaultId": "[concat('/subscriptions/',parameters('vaultSubscription'),'/resourceGroups/',parameters('vaultResourceGroupName'),'/providers/Microsoft.KeyVault/vaults/',parameters('vaultName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('appLocation')]",
+            "name": "[variables('resourceGroupName')]",
+            "properties": {}
+        },
+        {
+            "apiVersion": "2018-05-01",
+            "name": "dynamicSecret",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "parameters": {
+                    "appName": {
+                        "value": "[parameters('appName')]",
+                        "maxLength": 8,
+                        "type": "string"
+                    },
+                    "appLocation": {
+                        "value": "[parameters('appLocation')]",
+                        "type": "string"
+                    },
+                    "environment": {
+                        "value": "[parameters('environment')]",
+                        "allowedValues": ["dev", "test", "prod"],
+                        "type": "string"
+                    },
+                    "administratorLogin": {
+                        "value": "[parameters('administratorLogin')]",
+                        "type": "string"
+                    },
+                    "administratorLoginPassword": {
+                        "type": "SecureString",
+                        "reference": {
+                            "keyVault": {
+                                "id": "[variables('keyVaultId')]"
+                            },
+                            "secretName": "DatabasePassword"
+                        }
+                    }
+                },
+                "resources": [{
+                    "name": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]",
+                    "type": "Microsoft.Sql/servers",
+                    "location": "[parameters('appLocation')]",
+                    "tags": {
+                        "displayName": "SqlServer"
+                    },
+                    "apiVersion": "2014-04-01-preview",
+                    "properties": {
+                        "administratorLogin": "[parameters('administratorLogin')]",
+                        "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+                    }
+                }],
+                "outputs": {}
+            }
+        }
+    ],
+    "outputs": {}
+}

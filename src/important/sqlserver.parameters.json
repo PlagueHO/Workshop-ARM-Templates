@@ -1,0 +1,23 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "value": "<set to app name>"
+        },
+        "environment": {
+            "value": "<set to environment>"
+        },
+        "administratorLogin": {
+            "value": "<set administrator username>"
+        },
+        "administratorLoginPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/<SubscriptionId>/resourceGroups/<ResourceGroupName>/providers/Microsoft.KeyVault/vaults/<KeyVaultName>"
+                },
+                "secretName": "DatabasePassword"
+            }
+        }
+    }
+}
