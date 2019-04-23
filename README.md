@@ -24,30 +24,31 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Prerequisite Knowledge](#prerequisite-knowledge)
 - [Workshop Scenario](#workshop-scenario)
 - [Section 1 - Getting Setup](#section-1---getting-setup)
-- [Part 1.1 - Setting up Cloud Shell](#part-1-1---setting-up-cloud-shell) - 5 min
-- [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
-- [Part 1.3 - Register Providers required for Lab](#part-1.3---register-providers-required-for-lab) - 5 min
+- [Part 1.1 - Setting up Cloud Shell](#part-11---setting-up-cloud-shell) - 5 min
+- [Part 1.2 - Configure Visual Studio Code](#part-12---configure-visual-studio-code) - 5 min
+- [Part 1.3 - Register Providers required for Lab](#part-13---register-providers-required-for-lab) - 5 min
 - [Section 2 - Creating an ARM Template](#section-2---creating-an-arm-template)
-- [Part 2.1 - Create Resources in the Portal](#part-2.1---create-resources-in-the-portal)
-- [Part 2.2 - Export an ARM Template](#part-2.2---export-an-arm-template)
-- [Part 2.3 - Edit an Exported ARM Template](#part-2.3---edit-an-exported-arm-template)
+- [Part 2.1 - Create Resources in the Portal](#part-21---create-resources-in-the-portal) - 7 min
+- [Part 2.2 - Export an ARM Template](#part-22---export-an-arm-template) - 3 min
+- [Part 2.3 - Edit an Exported ARM Template](#part-23---edit-an-exported-arm-template) - 15 min
 - [Section 3 - Deploying an ARM Template](#section-3---deploying-an-arm-template)
-- [Part 3.1 - Visualize the ARM Template](#part-3.1---visualize-the-arm-template)
-- [Part 3.2 - Deploy the ARM Template using the Portal](#part-3.2---deploy-the-arm-template-using-the-portal)
-- [Part 3.3 - Re-deploy a Template Deployment](#part-3.3---re-deploy-a-template-deployment)
-- [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-3.4---deploy-the-arm-template-using-cloud-shell)
-- [Part 3.5 - Deploy the ARM Template with Parameters File using Cloud Shell](#part-3.5---deploy-the-arm-template-with-parameters-file-using-cloud-shell)
-- [Challenge 3.6 - Deploy from Storage Account](#challenge-3.6---deploy-from-storage-account)
+- [Part 3.1 - Visualize the ARM Template](#part-31---visualize-the-arm-template) - 1 min
+- [Part 3.2 - Deploy the ARM Template using the Portal](#part-32---deploy-the-arm-template-using-the-portal) - 5 min
+- [Part 3.3 - Re-deploy a Template Deployment](#part-33---re-deploy-a-template-deployment) - 3 min
+- [Part 3.4 - Deploy the ARM Template using Cloud Shell](#part-34---deploy-the-arm-template-using-cloud-shell) - 3 min
+- [Part 3.5 - Deploy the ARM Template with Parameters File using Cloud Shell](#part-35---deploy-the-arm-template-with-parameters-file-using-cloud-shell) - 3 min
+- [Challenge 3.6 - Deploy from Storage Account](#challenge-36---deploy-from-storage-account) - 10 min
 - [Section 4 - Important Techniques and Functions](#section-4---important-techniques-and-functions)
-- [Part 4.1 - Special Resources](#part-4.1---special-resources)
-- [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
-- [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
-- [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
-- [Part 4.4.1 - Deploy a SQL Server with a Static ID](#part-4.4.1---deploy-a-sql-server-with-a-static-id)
-- [Challenge 4.4.2 - Deploy a SQL Server with a Dynamic ID](#challenge-4.4.2---deploy-a-sql-server-with-a-dynamic-id)
-- [Part 4.5 - Create Multiple Instances](#part-4.5---create-multiple-instances)
+- [Part 4.1 - Special Resources](#part-41---special-resources) - 10 min
+- [Part 4.2 - Define Resource Dependencies](#part-42---define-resource-dependencies) - 7 min
+- [Part 4.3 - Modularize Templates](#part-43---modularize-templates) - 7 min
+- [Part 4.4 - Manage Secrets](#part-44---manage-secrets)
+- [Part 4.4.1 - Deploy Azure Key Vault using ARM Template](#part-441---deploy-azure-key-vault-using-arm-template) - 5 min
+- [Part 4.4.2 - Deploy a SQL Server with a Static ID](#part-442---deploy-a-sql-server-with-a-static-id) - 10 min
+- [Challenge 4.4.3 - Deploy a SQL Server with a Dynamic ID](#challenge-443---deploy-a-sql-server-with-a-dynamic-id) - 20 min
+- [Part 4.5 - Create Multiple Instances](#part-45---create-multiple-instances) - 5 min
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
-- [Part 5.1 - Remove Resources and Resource Groups](#part-5.1---remove-resources-and-resource-groups) - 2 min
+- [Part 5.1 - Remove Resources and Resource Groups](#part-51---remove-resources-and-resource-groups) - 2 min
 
 Estimated workshop time: 75 min
 Estimated Azure credit usage: USD 1.00 (as long as you delete the infrastructure straight after completion of the workshop)
@@ -1181,10 +1182,17 @@ deployment time.
 
 ### Part 4.4 - Manage Secrets
 
-> Estimated Completion Time: 10 min
+> Estimated Completion Time: 5 min
 
-The recommended way of providing access to secrets to ARM templates
-is at deploy time using secrets stored in an `Azure Key Vault`.
+Passing secrets and passwords into ARM template deployments can be
+done by setting them in parameter files or passing them in to PowerShell Az
+or AzCLI calls.
+This is an acceptable method of doing this, but it is not as secure
+as it could be.
+
+A more secure way of providing access to secrets by ARM template
+deployments is by specifying in the ARM tempalte that an `Azure Key Vault`
+should be used to retrieve the secret.
 
 > Important: For a Key Vault to be accessible by Azure Resource
 Manager during template deployments it must be **Enabled
@@ -1194,14 +1202,28 @@ There are two methods of referencing Key Vault secrets in an ARM
 template:
 
 - [Static ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-static-id)
+
+   ![Static ID diagram](/images/statickeyvault.png)
+
 - [Dynamic ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
+
+   ![Dyanmic ID diagram](/images/dynamickeyvault.png)
+
+#### Part 4.4.1 - Deploy Azure Key Vault using ARM Template
+
+> Estimated Completion Time: 5 min
 
 We will first need an Azure Key Vault with a secret in it
 that we can use for both _Static ID_ and _Dynamic ID_ retrieval
-from ARM templates:
+from ARM templates.
+
+> Important: For a Key Vault to be accessible by Azure Resource
+Manager during template deployments it must be **Enabled
+for Template Deployment**.
 
 1. Deploy an Azure Key Vault using the [/src/cleaned/keyvault.json](/src/important/keyvault.json)
    template and Azure Cloud Shell.
+
    This will also add a secret called `DatabasePassword` with a value
    of `myp@ssword!1`.
    The Key Vault will also be allowed to be configured with _Enabled for
@@ -1209,11 +1231,12 @@ from ARM templates:
    Resource Manager during template deployment.
    We will also grant access
 
-   > Important: You wouldn't normally want to create a secret this way
-   > as it would mean storing the secret in your deployment code which
-   > is very insecure.
-   > There are patters available to eliminate this but they are beyond
-   > ths scope of this workshop.
+   > Important: You wouldn't normally want to create a secret in an
+   > Azure Key Vault in this way as it would mean storing the secret
+   > in your deployment code which is very insecure.
+   > A more secure method would be to randomly generate the secret at the
+   > time of deployment, never storing it and making it only available
+   > to the ARM template service.
 
    ```powershell
    $keyVaultBaseName = '<set this to 8 character string that will be unique>'
@@ -1240,7 +1263,9 @@ from ARM templates:
 
    ![Azure Key Vault with Secret](images/portalkeyvaultsecret.png "Azure Key Vault with Secret")
 
-#### Part 4.4.1 - Deploy a SQL Server with a Static ID
+#### Part 4.4.2 - Deploy a SQL Server with a Static ID
+
+> Estimated Completion Time: 10 min
 
 When using a `Static ID` the ID of the Key Vault that is used in the
 ARM template is set in the ARM template.
@@ -1287,17 +1312,37 @@ in the ARM template before hand.
 The SQL Server will then be deployed using the password found in the
 **DatabasePassword** secret in the Key Value deployed in _Part 4.4_.
 
-#### Challenge 4.4.2 - Deploy a SQL Server with a Dynamic ID
+#### Challenge 4.4.3 - Deploy a SQL Server with a Dynamic ID
 
-In this challenge you will deploy a SQL Server with the administrator
+> Estimated Completion Time: 15 min
+
+This is a difficult challenge, but completing it will show you
+have mastered some of the most powerful features of ARM Templates.
+
+Using a dynamic Key Vault identifier requires the use of a _linked
+template_.
+
+The _linked template_ to use is the [/src/important/sqlserver.json](/src/important/sqlserver.json)
+template found at this URI:
+[https://raw.githubusercontent.com/PlagueHO/Workshop-ARM-Templates/master/src/important/sqlserver.json](https://raw.githubusercontent.com/PlagueHO/Workshop-ARM-Templates/master/src/important/sqlserver.json)
+
+You will need to create a new _parent template_ that links to the
+`sqlserver.json` file using the URI above.
+The _parent template_ will need to take parameters that specify
+the name of the Key Vault and the Resource Group that contains
+the Key Vault.
+These should just be the Key Vault
+
+with the administrator
 password pulled from the Key Vault **DatabasePassword** deployed
 in _Part 4.4_.
+
+You will need to use
 The ARM template should accept parameters for the Key Vault Name
 and Resource Group to pull the secret from.
 
 Refer to [this page](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
-for more information on how to pass the Key Vault identity storing
-the secret into the ARM Template.
+for more information on how to use a dynamic Key Vault.
 
 ### Part 4.5 - Create Multiple Instances
 
@@ -1362,13 +1407,15 @@ deployment time.
 This step is optional and only needs to be done if you're finished with
 workshop resources and want to get rid of them to save some Azure credit.
 
+You should repeat these steps for each Resource Group that was created
+as part of your workshop.
+
 1. Open the [Azure Portal](https://portal.azure.com).
 1. Click `Resource Groups` in the Azure Portal.
 
    ![Select Resource Groups](images/portalopenresourcegroup.png "Select Resource Groups")
 
-1. Click the Resource Group that was created to contain your App Service
-   in _Part 2.1_.
+1. Click a Resource Group that was created in the workshop.
 1. Click `Delete resource group`.
 
    ![Select Resource Groups](images/portalopenresourcegroup.png "Select Resource Groups")
