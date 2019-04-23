@@ -33,5 +33,10 @@
             "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
         }
     }],
-    "outputs": {}
+    "outputs": {
+        "sqlFQDN": {
+            "type": "string",
+            "value": "[reference(variables('sqlServerName')).fullyQualifiedDomainName]"
+        }
+    }
 }

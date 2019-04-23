@@ -24,7 +24,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Prerequisite Knowledge](#prerequisite-knowledge)
 - [Workshop Scenario](#workshop-scenario)
 - [Section 1 - Getting Setup](#section-1---getting-setup)
-- [Part 1.1 - Setting up Cloud Shell](#part-1.1---setting-up-cloud-shell) - 5 min
+- [Part 1.1 - Setting up Cloud Shell](#part-1-1---setting-up-cloud-shell) - 5 min
 - [Part 1.2 - Configure Visual Studio Code](#part-1.2---configure-visual-studio-code) - 5 min
 - [Part 1.3 - Register Providers required for Lab](#part-1.3---register-providers-required-for-lab) - 5 min
 - [Section 2 - Creating an ARM Template](#section-2---creating-an-arm-template)
@@ -86,7 +86,7 @@ You'll learn the basics in the following skills:
 
 ## Workshop Scenario
 
-In this workshop we want to create three almost identical environments for
+In this workshop in Section 1-3, we want to create three almost identical environments for
 hosting Web Apps: _Dev_, _Test_ and _Prod_.
 
 Each environment will be in its own Resource Group and will contain:
@@ -108,6 +108,7 @@ _Test_ and _Prod_ environments.
 
 ![Workshop Scenario](images/workshopscenario.png "Workshop Scenario")
 
+
 ## Challenges
 
 Throughout this workshop are **Challenges**.
@@ -115,6 +116,10 @@ These are additional tasks that you can undertake to increase your learning.
 These challenges will appear like this:
 
 > Challenge x.x.x: Do something or other.
+
+Section 4 of this workshop contains advanced techniques that do not
+relate to this workshop scenario, but could be used with it.
+It contains multiple challenges for you to complete.
 
 If you get stuck with a challenge, you can find an example solution in the [/src/challengesolutions/ folder](/src/challengesolutions/).
 

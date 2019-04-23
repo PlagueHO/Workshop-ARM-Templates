@@ -1,15 +1,12 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "metadata": {
-        "comments": "New-AzDeployment -TemplateFile ./challenge442.json -Location 'West US 2' -appName 'dsrgab19' -appLocation 'West US 2' -environment 'dev' -administratorLogin 'dscottraynsford' -vaultResourceGroupName 'dsrgabkv-dev-rg' -vaultName 'dsrgabkv-dev-kv'"
+        "comments": "$resourceGroup ='dsrgab19-rg'; $environment = 'dev'; $administratorLogin = 'dscottraynsford'; New-AzResourceGroup -Name $resourceGroup -Location $location -Force; New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile ./challenge442.json -appName 'dsrgab19' -environment $environment -administratorLogin $administratorLogin -vaultResourceGroupName 'dsrgabkv-dev-rg' -vaultName 'dsrgabkv-dev-kv'"
     },
     "contentVersion": "1.0.0.0",
     "parameters": {
         "appName": {
             "maxLength": 8,
-            "type": "string"
-        },
-        "appLocation": {
             "type": "string"
         },
         "environment": {
@@ -19,78 +16,78 @@
         "administratorLogin": {
             "type": "string"
         },
-        "vaultSubscription": {
-            "defaultValue": "[subscription().subscriptionId]",
-            "type": "string"
+        "vaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the keyvault that contains the secret."
+            }
+        },
+        "secretName": {
+            "type": "string",
+            "defaultValue": "DatabasePassword",
+            "metadata": {
+                "description": "The name of the secret."
+            }
         },
         "vaultResourceGroupName": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "The name of the resource group that contains the keyvault."
+            }
         },
-        "vaultName": {
-            "type": "string"
+        "vaultSubscription": {
+            "type": "string",
+            "defaultValue": "[subscription().subscriptionId]",
+            "metadata": {
+                "description": "The name of the subscription that contains the keyvault."
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+            },
+            "defaultValue": "https://raw.githubusercontent.com/PlagueHO/Workshop-ARM-Templates/master/src/important/"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated."
+            },
+            "defaultValue": ""
         }
     },
-    "variables": {
-        "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
-        "keyVaultId": "[concat('/subscriptions/',parameters('vaultSubscription'),'/resourceGroups/',parameters('vaultResourceGroupName'),'/providers/Microsoft.KeyVault/vaults/',parameters('vaultName'))]"
-    },
+    "variables": {},
     "resources": [
-        {
-            "type": "Microsoft.Resources/resourceGroups",
-            "apiVersion": "2018-05-01",
-            "location": "[parameters('appLocation')]",
-            "name": "[variables('resourceGroupName')]",
-            "properties": {}
-        },
         {
             "apiVersion": "2018-05-01",
             "name": "dynamicSecret",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "[uri(parameters('_artifactsLocation'), concat('./sqlserver.json', parameters('_artifactsLocationSasToken')))]"
+                },
                 "parameters": {
                     "appName": {
-                        "value": "[parameters('appName')]",
-                        "maxLength": 8,
-                        "type": "string"
-                    },
-                    "appLocation": {
-                        "value": "[parameters('appLocation')]",
-                        "type": "string"
+                        "value": "[parameters('appName')]"
                     },
                     "environment": {
-                        "value": "[parameters('environment')]",
-                        "allowedValues": ["dev", "test", "prod"],
-                        "type": "string"
+                        "value": "[parameters('environment')]"
                     },
                     "administratorLogin": {
-                        "value": "[parameters('administratorLogin')]",
-                        "type": "string"
+                        "value": "[parameters('administratorLogin')]"
                     },
                     "administratorLoginPassword": {
-                        "type": "SecureString",
                         "reference": {
                             "keyVault": {
-                                "id": "[variables('keyVaultId')]"
+                                "id": "[resourceId(parameters('vaultSubscription'), parameters('vaultResourceGroupName'), 'Microsoft.KeyVault/vaults', parameters('vaultName'))]"
                             },
-                            "secretName": "DatabasePassword"
+                            "secretName": "[parameters('secretName')]"
                         }
                     }
-                },
-                "resources": [{
-                    "name": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]",
-                    "type": "Microsoft.Sql/servers",
-                    "location": "[parameters('appLocation')]",
-                    "tags": {
-                        "displayName": "SqlServer"
-                    },
-                    "apiVersion": "2014-04-01-preview",
-                    "properties": {
-                        "administratorLogin": "[parameters('administratorLogin')]",
-                        "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
-                    }
-                }],
-                "outputs": {}
+                }
             }
         }
     ],
