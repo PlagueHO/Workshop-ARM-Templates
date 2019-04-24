@@ -1218,8 +1218,12 @@ that we can use for both _Static ID_ and _Dynamic ID_ retrieval
 from ARM templates.
 
 > Important: For a Key Vault to be accessible by Azure Resource
-Manager during template deployments it must be **Enabled
-for Template Deployment**.
+> Manager during template deployments it must be **Enabled
+> for Template Deployment**.
+> The user who deploys any ARM templates that access this Key
+> Vault must have the `Microsoft.KeyVault/vaults/deploy/action`
+> permission for the scope that contains the Key Vault and
+> the Resource Group.
 
 1. Deploy an Azure Key Vault using the [/src/cleaned/keyvault.json](/src/important/keyvault.json)
    template and Azure Cloud Shell.
@@ -1229,7 +1233,8 @@ for Template Deployment**.
    The Key Vault will also be allowed to be configured with _Enabled for
    Template Deployment_ which is required for it to be accessed by Azure
    Resource Manager during template deployment.
-   We will also grant access
+   We will also grant access to a user (usually yourself) to the keys and
+   secrets in the Key Vault.
 
    > Important: You wouldn't normally want to create a secret in an
    > Azure Key Vault in this way as it would mean storing the secret
@@ -1239,9 +1244,9 @@ for Template Deployment**.
    > to the ARM template service.
 
    ```powershell
-   $keyVaultBaseName = '<set this to 8 character string that will be unique>'
+   $keyVaultBaseName = '<An 8 character string that should be globally unique - e.g. your initials plus gab19>'
    $environment = 'dev'
-   $administratorUPN = '<enter the e-mail address of a user to grant admin access to>'
+   $administratorUPN = '<enter the e-mail address of a user to grant Key Vault admin access>'
    $resourceGroupName = "${keyVaultBaseName}-${environment}-rg"
    $keyVaultName = "${keyVaultBaseName}-${environment}-kv"
    $userId = (Get-AzAdUser -UserPrincipalName $administratorUPN).Id
@@ -1253,8 +1258,8 @@ for Template Deployment**.
       -enabledForDeployment $true `
       -enabledForTemplateDeployment $true `
       -objectId $userId `
-      -keysPermissions List,Get `
-      -secretsPermissions List,Get `
+      -keysPermissions List,Get,Set,Delete `
+      -secretsPermissions List,Get,Set,Delete `
       -secretName $secretName `
       -secretValue $secretValueSecure
    ```
@@ -1331,18 +1336,39 @@ You will need to create a new _parent template_ that links to the
 The _parent template_ will need to take parameters that specify
 the name of the Key Vault and the Resource Group that contains
 the Key Vault.
-These should just be the Key Vault
 
-with the administrator
-password pulled from the Key Vault **DatabasePassword** deployed
-in _Part 4.4_.
+The Key Vault parameters would be passed either in an ARM Template
+parameters file or to the `New-AzResourceGroupDeployment` or
+`az group deployment` commands.
 
-You will need to use
-The ARM template should accept parameters for the Key Vault Name
-and Resource Group to pull the secret from.
+The secret **DatabasePassword** will be used from the Azure Key
+Vault deployed in _Part 4.4.1_.
 
 Refer to [this page](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
 for more information on how to use a dynamic Key Vault.
+
+To help you get started, here is how you might expect to call a Dyamic ID
+ARM template using PowerShell in Azure Cloud Shell if you had uploaded
+the ARM template as `challenge443.json`:
+
+```powershell
+$appName = 'dsrgab19'
+$resourceGroup ='dsrgab19-rg'
+$environment = 'dev'
+$administratorLogin = 'dscottraynsford'
+$vaultResourceGroupName = 'dsrgabkv-dev-rg'
+$vaultName = 'dsrgabkv-dev-kv'
+
+New-AzResourceGroup -Name $resourceGroup -Location $location -Force
+New-AzResourceGroupDeployment `
+   -ResourceGroupName $resourceGroup `
+   -TemplateFile ./challenge443.json `
+   -appName $appName `
+   -environment $environment `
+   -administratorLogin $administratorLogin `
+   -vaultResourceGroupName $vaultResourceGroupName `
+   -vaultName $vaultName
+```
 
 ### Part 4.5 - Create Multiple Instances
 
