@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "maxLength": 8,
+            "type": "string"
+        },
+        "appLocation": {
+            "defaultValue": "West US 2",
+            "type": "string"
+        },
+        "environment": {
+            "defaultValue": "dev",
+            "allowedValues": ["dev", "test", "prod"],
+            "type": "string"
+        },
+        "administratorLogin": {
+            "type": "string"
+        },
+        "administratorLoginPassword": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]",
+        "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+    },
+    "resources": [{
+            "condition": "[equals(parameters('environment'),'prod')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2017-10-01",
+            "name": "[concat(variables('storageAccountName'),'logs')]",
+            "location": "[parameters('appLocation')]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS"
+            }
+        },
+        {
+            "name": "[variables('sqlserverName')]",
+            "type": "Microsoft.Sql/servers",
+            "location": "[parameters('appLocation')]",
+            "tags": {
+                "displayName": "SqlServer"
+            },
+            "apiVersion": "2014-04-01-preview",
+            "properties": {
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+            }
+        }
+    ]
+}

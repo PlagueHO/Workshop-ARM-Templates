@@ -49,6 +49,7 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Part 4.4.2 - Deploy a SQL Server with a Static ID](#part-442---deploy-a-sql-server-with-a-static-id) - 10 min
 - [Challenge 4.4.3 - Deploy a SQL Server with a Dynamic ID](#challenge-443---deploy-a-sql-server-with-a-dynamic-id) - 20 min
 - [Part 4.5 - Create Multiple Instances](#part-45---create-multiple-instances) - 5 min
+- [Part 4.6 - Conditionally Depoy a Resource](#part-46---conditionally-deploy-a-resource) - 2 min
 - [Section 5 - Cleanup After the Workshop](#section-5---cleanup-after-the-workshop)
 - [Part 5.1 - Remove Resources and Resource Groups](#part-51---remove-resources-and-resource-groups) - 2 min
 
@@ -110,7 +111,6 @@ Once the ARM template has been customized, we will use it to deploy the
 _Test_ and _Prod_ environments.
 
 ![Workshop Scenario](images/workshopscenario.png "Workshop Scenario")
-
 
 ## Challenges
 
@@ -1684,6 +1684,8 @@ New-AzResourceGroupDeployment `
 
 ### Part 4.5 - Create Multiple Instances
 
+> Estimated Completion Time: 5 min
+
 One technique that is very useful is the ability for a resource definition
 can be used to [create multiple instances](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-multiple) of the resource.
 
@@ -1742,6 +1744,84 @@ deployment time.
 > The default `accountList` should contain 4 array elements.
 > Also, change the ARM Template to deploy all storage accounts in
 > parallel and remove the `batchSize` parameter.
+
+### Part 4.6 - Conditionally Depoy a Resource
+
+> Estimated Completion Time: 2 min
+
+It is possible to evaulate an expression in each Resource and prevent
+the resource from being deployed if the expression evaluates to _False_.
+This technique is quite useful for having a single _master template_
+that can deploy different resources for different environments.
+For example, deploying an additional storage blob for logs when
+deploying a Production environment.
+
+The following steps will use an ARM template with a conditional resource
+in it.
+The Storage Account resource will only be deployed if the environment
+is 'Prod'.
+
+1. Review the [/src/important/conditional.json](/src/important/conditional.json) template.
+
+    ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+         "appName": {
+               "maxLength": 8,
+               "type": "string"
+         },
+         "appLocation": {
+               "defaultValue": "West US 2",
+               "type": "string"
+         },
+         "environment": {
+               "defaultValue": "dev",
+               "allowedValues": ["dev", "test", "prod"],
+               "type": "string"
+         },
+         "administratorLogin": {
+               "type": "string"
+         },
+         "administratorLoginPassword": {
+               "type": "securestring"
+         }
+      },
+      "variables": {
+         "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]",
+         "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+      },
+      "resources": [{
+               "condition": "[equals(parameters('environment'),'prod')]",
+               "type": "Microsoft.Storage/storageAccounts",
+               "apiVersion": "2017-10-01",
+               "name": "[concat(variables('storageAccountName'),'logs')]",
+               "location": "[parameters('appLocation')]",
+               "kind": "StorageV2",
+               "sku": {
+                  "name": "Standard_LRS"
+               }
+         },
+         {
+               "name": "[variables('sqlserverName')]",
+               "type": "Microsoft.Sql/servers",
+               "location": "[parameters('appLocation')]",
+               "tags": {
+                  "displayName": "SqlServer"
+               },
+               "apiVersion": "2014-04-01-preview",
+               "properties": {
+                  "administratorLogin": "[parameters('administratorLogin')]",
+                  "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+               }
+         }
+      ]
+   }
+    ```
+
+1. Deploy the [/src/important/conditional.json](/src/important/conditional.json)
+   template using either the Portal or Cloud Shell.
 
 ## Section 5 - Cleanup After the Workshop
 
