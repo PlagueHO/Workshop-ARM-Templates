@@ -1,7 +1,7 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "metadata": {
-        "comments": "$resourceGroup ='dsrgab19-rg'; $environment = 'dev'; $administratorLogin = 'dscottraynsford'; New-AzResourceGroup -Name $resourceGroup -Location $location -Force; New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile ./challenge442.json -appName 'dsrgab19' -environment $environment -administratorLogin $administratorLogin -vaultResourceGroupName 'dsrgabkv-dev-rg' -vaultName 'dsrgabkv-dev-kv'"
+        "comments": "$resourceGroup ='dsrgab19-rg'; $environment = 'dev'; $administratorLogin = 'dscottraynsford'; New-AzResourceGroup -Name $resourceGroup -Location $location -Force; New-AzResourceGroupDeployment -ResourceGroupName $resourceGroup -TemplateFile ./challenge443.json -appName 'dsrgab19' -environment $environment -administratorLogin $administratorLogin -vaultResourceGroupName 'dsrgabkv-dev-rg' -vaultName 'dsrgabkv-dev-kv'"
     },
     "contentVersion": "1.0.0.0",
     "parameters": {
