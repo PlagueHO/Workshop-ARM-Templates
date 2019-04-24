@@ -792,8 +792,9 @@ and use it in automation or CI/CD tools.
 
    ```powershell
    $environment = 'prod'
-   New-AzResourceGroup -Name "${appName}-${environment}-rg" -Location 'West US 2' -Force
-   New-AzResourceGroupDeployment -ResourceGroupName "${appName}-${environment}-rg" -TemplateFile ./template.json -Environment $environment -AppName $appName
+   $resourceGroupName = "${appName}-${environment}-rg"
+   New-AzResourceGroup -Name $resourceGroupName -Location 'West US 2' -Force
+   New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile ./template.json -Environment $environment -AppName $appName
    ```
 
 After a few seconds the deployment will be confirmed.
@@ -966,11 +967,11 @@ Templates even more powerful.
 In this section we will use the skills from previous parts to quickly
 review and deploy ARM templates showing these important techniques.
 
-- [Part 4.1 - Special Resources](#part-4.1---special-resources)
-- [Part 4.2 - Define Resource Dependencies](#part-4.2---define-resource-dependencies)
-- [Part 4.3 - Modularize Templates](#part-4.3---modularize-templates)
-- [Part 4.4 - Manage Secrets](#part-4.4---manage-secrets)
-- [Part 4.5 - Create Multiple Instances](#part-4.5---create-multiple-instances)
+- [Part 4.1 - Special Resources](#part-41---special-resources)
+- [Part 4.2 - Define Resource Dependencies](#part-42---define-resource-dependencies)
+- [Part 4.3 - Modularize Templates](#part-43---modularize-templates)
+- [Part 4.4 - Manage Secrets](#part-44---manage-secrets)
+- [Part 4.5 - Create Multiple Instances](#part-45---create-multiple-instances)
 
 ### Part 4.1 - Special Resources
 
@@ -1203,11 +1204,11 @@ template:
 
 - [Static ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-static-id)
 
-   ![Static ID diagram](/images/statickeyvault.png)
+  ![Static ID diagram](/images/statickeyvault.png)
 
 - [Dynamic ID](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-keyvault-parameter#reference-secrets-with-dynamic-id)
 
-   ![Dyanmic ID diagram](/images/dynamickeyvault.png)
+  ![Dyanmic ID diagram](/images/dynamickeyvault.png)
 
 #### Part 4.4.1 - Deploy Azure Key Vault using ARM Template
 
@@ -1273,9 +1274,11 @@ from ARM templates.
 > Estimated Completion Time: 10 min
 
 When using a `Static ID` the ID of the Key Vault that is used in the
-ARM template is set in the ARM template.
+ARM template is passed in via the ARM template parameter file.
 This means that the full ID of the Key Vault must be known and stored
-in the ARM template before hand.
+in the ARM template parameter file before hand.
+
+![Static ID diagram](/images/statickeyvault.png)
 
 1. Review the [/src/important/sqlserver.json](/src/important/sqlserver.json)
    template.
@@ -1323,6 +1326,14 @@ The SQL Server will then be deployed using the password found in the
 
 This is a difficult challenge, but completing it will show you
 have mastered some of the most powerful features of ARM Templates.
+
+In some scenarios, you need to reference a key vault secret that varies
+based on the current deployment. Or, you may want to pass parameter values to
+the template rather than create a reference parameter in the parameter file.
+In either case, you can dynamically generate the resource ID for a key
+vault secret by using a linked template.
+
+![Dyanmic ID diagram](/images/dynamickeyvault.png)
 
 Using a dynamic Key Vault identifier requires the use of a _linked
 template_.
