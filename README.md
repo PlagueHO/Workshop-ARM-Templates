@@ -1479,6 +1479,8 @@ the linked template URI using ARM Template functions.
 > Challenge 4.3.3: Adjust the [/src/important/linkedmaster.json](/src/important/linkedmaster.json) to
 > assemble the URIs for the _linked templates_ using parameters passed into
 > the template.
+> Enable the _Linked Templates_ to be stored in an Azure Storage account with
+> a SAS token passed in.
 
 ### Part 4.4 - Manage Secrets
 
