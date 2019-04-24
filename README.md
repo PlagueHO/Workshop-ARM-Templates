@@ -41,7 +41,9 @@ other training sessions or events. It is provided free and under [MIT license](L
 - [Section 4 - Important Techniques and Functions](#section-4---important-techniques-and-functions)
 - [Part 4.1 - Special Resources](#part-41---special-resources) - 10 min
 - [Part 4.2 - Define Resource Dependencies](#part-42---define-resource-dependencies) - 7 min
-- [Part 4.3 - Modularize Templates](#part-43---modularize-templates) - 7 min
+- [Part 4.3 - Modularize Templates](#part-43---modularize-templates)
+- [Part 4.3.1 - Nested Templates](#part-431---nested-templates) - 5 min
+- [Part 4.3.2 - Linked Templates](#part-432---linked-templates) - 5 min
 - [Part 4.4 - Manage Secrets](#part-44---manage-secrets)
 - [Part 4.4.1 - Deploy Azure Key Vault using ARM Template](#part-441---deploy-azure-key-vault-using-arm-template) - 5 min
 - [Part 4.4.2 - Deploy a SQL Server with a Static ID](#part-442---deploy-a-sql-server-with-a-static-id) - 10 min
@@ -1179,7 +1181,304 @@ deployment time.
 
 ### Part 4.3 - Modularize Templates
 
-> Estimated Completion Time: 7 min
+With small deployments or simple systems it might make sense to have just
+a single ARM template describing the resources.
+However, for more advanced or complex systems it is a good practice to
+break templates down into smaller templates.
+This makes it easier to reuse templates as well as making them easier to
+manage and edit.
+
+Modularizing your templates also enables you to create a template library
+that are always configured with your best practices and then use a _main
+template_ to orchestrate the deployment of all the _related templates_.
+
+There are two methods of executing _related templates_ from a _main
+template_:
+
+- Nested templates
+- Linked templates
+
+The following parts will show the difference between these two approaches.
+
+#### Part 4.3.1 - Nested Templates
+
+> Estimated Completion Time: 5 min
+
+Nested templates are essentially embedding an entire copy of the _nested
+templates_ inside a _main template_.
+
+> Important: one important limitation with nested templates is that they
+> cannot use parameters or variables that are defined within the nested
+> template.
+> You can use parameters and variables from the main template.
+
+In this part we will review and deploy a _main template_ containing two
+_nested templates_.
+The _main template_ will deploy a resource group and two _nested
+templates_.
+One _nested template_ will deploy a storage account and the other will
+deploy a SQL Server.
+
+1. Review the [/src/important/nested.json](/src/important/nested.json) template.
+
+   ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+      "contentVersion": "1.0.0.1",
+      "parameters": {
+         "appName": {
+               "maxLength": 8,
+               "type": "string"
+         },
+         "appLocation": {
+               "defaultValue": "West US 2",
+               "type": "string"
+         },
+         "environment": {
+               "defaultValue": "dev",
+               "allowedValues": ["dev", "test", "prod"],
+               "type": "string"
+         },
+         "administratorLogin": {
+               "type": "string"
+         },
+         "administratorLoginPassword": {
+            "type": "securestring"
+         }
+      },
+      "variables": {
+         "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
+         "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]",
+         "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+      },
+      "resources": [{
+               "type": "Microsoft.Resources/resourceGroups",
+               "apiVersion": "2018-05-01",
+               "location": "[parameters('appLocation')]",
+               "name": "[variables('resourceGroupName')]",
+               "properties": {}
+         },
+         {
+               "type": "Microsoft.Resources/deployments",
+               "apiVersion": "2018-05-01",
+               "name": "storageDeployment",
+               "resourceGroup": "[variables('resourceGroupName')]",
+               "dependsOn": [
+                  "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+               ],
+               "properties": {
+                  "mode": "Incremental",
+                  "template": {
+                     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                     "contentVersion": "1.0.0.0",
+                     "resources": [{
+                           "type": "Microsoft.Storage/storageAccounts",
+                           "apiVersion": "2017-10-01",
+                           "name": "[variables('storageAccountName')]",
+                           "location": "[parameters('appLocation')]",
+                           "kind": "StorageV2",
+                           "sku": {
+                              "name": "Standard_LRS"
+                           }
+                     }]
+                  }
+               }
+         },
+         {
+               "type": "Microsoft.Resources/deployments",
+               "apiVersion": "2018-05-01",
+               "name": "sqlDeployment",
+               "resourceGroup": "[variables('resourceGroupName')]",
+               "dependsOn": [
+                  "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+               ],
+               "properties": {
+                  "mode": "Incremental",
+                  "template": {
+                     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                     "contentVersion": "1.0.0.0",
+                     "resources": [{
+                           "name": "[variables('sqlserverName')]",
+                           "type": "Microsoft.Sql/servers",
+                           "location": "[parameters('appLocation')]",
+                           "tags": {
+                              "displayName": "SqlServer"
+                           },
+                           "apiVersion": "2014-04-01-preview",
+                           "properties": {
+                              "administratorLogin": "[parameters('administratorLogin')]",
+                              "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+                           }
+                     }]
+                  }
+               }
+         }
+      ]
+   }
+   ```
+
+1. Upload the [/src/important/nested.json](/src/important/nested.json) template to
+   Cloud Shell.
+
+> Challenge 4.3.1: Deploy the [/src/important/nested.json](/src/important/nested.json)
+> template using `AzCli` in the Cloud Shell.
+
+#### Part 4.3.2 - Linked Templates
+
+> Estimated Completion Time: 5 min
+
+There are a few limitations with Nested templates that make Linked Templates
+an often preferrable solution to modularizing.
+For example, having to combine templates into a single _monolithic_ template
+tends to make them more difficult to manage and diagnose issues.
+
+Instead, a better method is to have the _master template_ refer to the
+_related templates_ using URIs.
+This allows creation of a template library in a storage blob or similar
+storage location.
+
+To link to an external template set the `templateLink` property of a
+deployment resource:
+
+```json
+"resources": [
+  {
+     "type": "Microsoft.Resources/deployments",
+     "apiVersion": "2018-05-01",
+     "name": "linkedTemplate",
+     "properties": {
+       "mode": "Incremental",
+       "templateLink": {
+          "uri":"https://mystorageaccount.blob.core.windows.net/AzureTemplates/newStorageAccount.json",
+          "contentVersion":"1.0.0.0"
+       },
+       "parameters": {
+          "StorageAccountName":{"value": "[parameters('StorageAccountName')]"}
+        }
+     }
+  }
+]
+```
+
+To deploy a linked template, we only need to deploy the _master template_.
+The _linked templates_ will be retrieved automatically during deployment.
+
+Note: the _linked templates_ can be stored inside secure storage accounts,
+but will require passing a SAS token into the ARM Template and assembling
+the linked template URI using ARM Template functions.
+
+1. Review the _master template_ [/src/important/linkedmaster.json](/src/important/linkedmaster.json) template.
+
+   ```json
+   {
+      "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+      "contentVersion": "1.0.0.1",
+      "parameters": {
+         "appName": {
+               "maxLength": 8,
+               "type": "string"
+         },
+         "appLocation": {
+               "defaultValue": "West US 2",
+               "type": "string"
+         },
+         "environment": {
+               "defaultValue": "dev",
+               "allowedValues": ["dev", "test", "prod"],
+               "type": "string"
+         },
+         "administratorLogin": {
+               "type": "string"
+         },
+         "administratorLoginPassword": {
+               "type": "securestring"
+         }
+      },
+      "variables": {
+         "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]"
+      },
+      "resources": [{
+               "type": "Microsoft.Resources/resourceGroups",
+               "apiVersion": "2018-05-01",
+               "location": "[parameters('appLocation')]",
+               "name": "[variables('resourceGroupName')]",
+               "properties": {}
+         },
+         {
+               "type": "Microsoft.Resources/deployments",
+               "apiVersion": "2018-05-01",
+               "name": "storageDeployment",
+               "resourceGroup": "[variables('resourceGroupName')]",
+               "dependsOn": [
+                  "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+               ],
+               "properties": {
+                  "mode": "Incremental",
+                  "templateLink": {
+                     "uri": "https://raw.githubusercontent.com/PlagueHO/Workshop-ARM-Templates/master/src/important/linkedstorage.json",
+                     "contentVersion": "1.0.0.0"
+                  },
+                  "parameters": {
+                     "appName": {
+                           "value": "[parameters('appName')]"
+                     },
+                     "appLocation": {
+                           "value": "[parameters('appLocation')]"
+                     },
+                     "environment": {
+                           "value": "[parameters('environment')]"
+                     }
+                  }
+               }
+         },
+         {
+               "type": "Microsoft.Resources/deployments",
+               "apiVersion": "2018-05-01",
+               "name": "sqlDeployment",
+               "resourceGroup": "[variables('resourceGroupName')]",
+               "dependsOn": [
+                  "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+               ],
+               "properties": {
+                  "mode": "Incremental",
+                  "templateLink": {
+                     "uri": "https://raw.githubusercontent.com/PlagueHO/Workshop-ARM-Templates/master/src/important/linkedsqlserver.json",
+                     "contentVersion": "1.0.0.0"
+                  },
+                  "parameters": {
+                     "appName": {
+                           "value": "[parameters('appName')]"
+                     },
+                     "appLocation": {
+                           "value": "[parameters('appLocation')]"
+                     },
+                     "environment": {
+                           "value": "[parameters('environment')]"
+                     },
+                     "administratorLogin": {
+                           "value": "[parameters('administratorLogin')]"
+                     },
+                     "administratorLoginPassword": {
+                           "value": "[parameters('administratorLoginPassword')]"
+                     }
+                  }
+               }
+         }
+      ]
+   }
+   ```
+
+1. Review the linked SQL Server template [/src/important/linkedsqlserver.json](/src/important/linkedsqlserver.json) template.
+1. Review the linked Storage template [/src/important/linkedstorage.json](/src/important/linkedstorage.json) template.
+1. Upload the [/src/important/linkedmaster.json](/src/important/linkedmaster.json) template to
+   Cloud Shell.
+
+> Challenge 4.3.2: Deploy the [/src/important/linkedmaster.json](/src/important/linkedmaster.json)
+> template using `AzCli` in the Cloud Shell.
+>
+> Challenge 4.3.3: Adjust the [/src/important/linkedmaster.json](/src/important/linkedmaster.json) to
+> assemble the URIs for the _linked templates_ using parameters passed into
+> the template.
 
 ### Part 4.4 - Manage Secrets
 
@@ -1433,7 +1732,14 @@ deployment time.
 1. Deploy the [/src/important/multistoragetemplate.json](/src/important/multistoragetemplate.json)
    template using either the Portal or Cloud Shell.
 
-| Challenge 4.5.1: Use `AzCli` to execute the deployment.
+> Challenge 4.5.1: Use the **AzCli** `az group deployment` command in
+> Cloud Shell to execute the deployment.
+>
+> Challenge 4.5.2: Adjust the ARM template above to deploy an array
+> of accounts passed in using the ARM Template parameter `accountList`.
+> The default `accountList` should contain 4 array elements.
+> Also, change the ARM Template to deploy all storage accounts in
+> parallel and remove the `batchSize` parameter.
 
 ## Section 5 - Cleanup After the Workshop
 

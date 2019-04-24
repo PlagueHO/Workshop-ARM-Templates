@@ -1,0 +1,93 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.1",
+    "parameters": {
+        "appName": {
+            "maxLength": 8,
+            "type": "string"
+        },
+        "appLocation": {
+            "defaultValue": "West US 2",
+            "type": "string"
+        },
+        "environment": {
+            "defaultValue": "dev",
+            "allowedValues": ["dev", "test", "prod"],
+            "type": "string"
+        },
+        "administratorLogin": {
+            "type": "string"
+        },
+        "administratorLoginPassword": {
+           "type": "securestring"
+        }
+    },
+    "variables": {
+        "resourceGroupName": "[concat(parameters('appName'), '-', parameters('environment'), '-rg')]",
+        "storageAccountName": "[concat(parameters('appName'), parameters('environment'))]",
+        "sqlserverName": "[concat(parameters('appName'), '-',parameters('environment'), '-sql')]"
+    },
+    "resources": [{
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('appLocation')]",
+            "name": "[variables('resourceGroupName')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "storageDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [{
+                        "type": "Microsoft.Storage/storageAccounts",
+                        "apiVersion": "2017-10-01",
+                        "name": "[variables('storageAccountName')]",
+                        "location": "[parameters('appLocation')]",
+                        "kind": "StorageV2",
+                        "sku": {
+                            "name": "Standard_LRS"
+                        }
+                    }]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "sqlDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [{
+                        "name": "[variables('sqlserverName')]",
+                        "type": "Microsoft.Sql/servers",
+                        "location": "[parameters('appLocation')]",
+                        "tags": {
+                            "displayName": "SqlServer"
+                        },
+                        "apiVersion": "2014-04-01-preview",
+                        "properties": {
+                            "administratorLogin": "[parameters('administratorLogin')]",
+                            "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+                        }
+                    }]
+                }
+            }
+        }
+    ]
+}
