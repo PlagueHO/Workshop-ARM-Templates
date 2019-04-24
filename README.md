@@ -974,6 +974,7 @@ review and deploy ARM templates showing these important techniques.
 - [Part 4.3 - Modularize Templates](#part-43---modularize-templates)
 - [Part 4.4 - Manage Secrets](#part-44---manage-secrets)
 - [Part 4.5 - Create Multiple Instances](#part-45---create-multiple-instances)
+- [Part 4.6 - Conditionally Depoy a Resource](#part-46---conditionally-deploy-a-resource)
 
 ### Part 4.1 - Special Resources
 
